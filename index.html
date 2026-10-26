@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catfish Treasure Hunt</title>
+<link rel="stylesheet" href="styles.css">
+<script>
+  window.onerror = function (msg, url, line) {
+    console.error('Page error:', msg, url, line);
+    var errBox = document.getElementById('debugBanner');
+    if (!errBox) {
+      errBox = document.createElement('div');
+      errBox.id = 'debugBanner';
+      errBox.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;padding:14px;background:#e03131;color:#fff;font-family:sans-serif;font-size:14px;border-radius:8px;z-index:9999999;box-shadow:0 4px 12px rgba(0,0,0,0.5);';
+      document.body.appendChild(errBox);
+    }
+    errBox.innerHTML = '<b>Script Notice:</b> ' + msg + ' (Line ' + line + ')';
+  };
+</script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" width="900" height="600"></canvas>
+    <canvas id="overlay" width="900" height="600"></canvas>
+
+    <div id="hud">
+      <div class="hud-left">
+        <div class="hud-chip">Treasures <b id="treasureCount">0 / 6</b></div>
+        <div class="hud-chip life-chip">
+          <span class="chip-label">Life</span>
+          <div class="life-bar"><div id="lifeFill"></div></div>
+        </div>
+      </div>
+      <div class="hud-right" style="display: flex; gap: 10px;">
+        <div class="hud-chip signal-chip">
+          <span class="chip-label">Signal</span>
+          <div class="signal-bar"><div id="signalFill"></div></div>
+        </div>
+        <div class="hud-chip view-chip" id="viewBtn" style="pointer-events: auto; cursor: pointer;" title="Toggle 3rd / 1st / Bird's Eye view (V)">
+          <span class="chip-label">View</span>
+          <b id="viewLabel">3rd Person (V)</b>
+        </div>
+        <div class="hud-chip touch-chip" id="toggleTouchBtn" style="pointer-events: auto; cursor: pointer;" title="Toggle On-screen Touch Controls">
+          <span class="chip-label">Controls</span>
+          <b>📱 Touch</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- On-screen Touch Controls for Android Tablet & Touchscreens -->
+    <div id="touchControls" class="touch-controls">
+      <!-- Left: Virtual Joystick -->
+      <div id="joystickZone" class="joystick-zone">
+        <div id="joystickBase" class="joystick-base">
+          <div class="joystick-arrow joystick-arrow-up">▲</div>
+          <div class="joystick-arrow joystick-arrow-left">◀</div>
+          <div class="joystick-arrow joystick-arrow-right">▶</div>
+          <div class="joystick-arrow joystick-arrow-down">▼</div>
+          <div id="joystickThumb" class="joystick-thumb"></div>
+        </div>
+      </div>
+
+      <!-- Right: Action Buttons -->
+      <div id="touchActions" class="touch-actions">
+        <div class="touch-btn-cluster">
+          <div class="touch-btn-row">
+            <button id="touchViewBtn" class="touch-btn touch-btn-util" aria-label="Toggle Camera View">
+              <span class="touch-icon">👁</span>
+              <span class="touch-lbl">View</span>
+            </button>
+            <button id="touchMapBtn" class="touch-btn touch-btn-util" aria-label="Toggle Sonar Map">
+              <span class="touch-icon">🗺</span>
+              <span class="touch-lbl">Map</span>
+            </button>
+          </div>
+          <div class="touch-btn-row">
+            <button id="touchUpBtn" class="touch-btn touch-btn-vert" aria-label="Swim Up">
+              <span class="touch-icon">▲</span>
+              <span class="touch-lbl">Up</span>
+            </button>
+            <button id="touchDownBtn" class="touch-btn touch-btn-vert" aria-label="Dive Down">
+              <span class="touch-icon">▼</span>
+              <span class="touch-lbl">Dive</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="hint">WASD / Touch Joystick to swim &middot; Space / Shift / Up / Dive buttons &middot; V for Camera &middot; M for Map</div>
+
+    <div id="startScreen" class="screen">
+      <h1>Catfish Treasure Hunt</h1>
+      <p class="lede">A cat-faced fish roams the vast 3D open ocean. Follow the treasure map and its signal to dig up every hidden chest &mdash; but a cunning shark drains your life, and plants explosive fake treasures to lure you in.</p>
+      <ul>
+        <li><b>WASD / On-screen Joystick</b> &mdash; swim forward, backward & 360&deg; steer</li>
+        <li><b>Space / Shift (or Up / Dive buttons)</b> &mdash; ascend / dive in 3D</li>
+        <li><b>V (or View button)</b> &mdash; cycle between <b>3rd Person</b>, <b>1st Person</b> & <b>Bird's Eye</b> views</li>
+        <li><b>M (or Map button)</b> &mdash; open the 3D sonar navigation chart</li>
+        <li><b>Tablet / Mobile Ready</b> &mdash; tap 📱 Touch in top bar anytime to toggle touch controls</li>
+        <li>Watch the <b>Signal</b> meter heat up as you near a treasure</li>
+        <li>Keep your <b>Life</b> bar up &mdash; the shark sucks life when close, but it refills when you escape</li>
+        <li>Beware <b class="danger">explosive fake treasures</b> the shark plants &mdash; a lit fuse costs you half your life!</li>
+      </ul>
+      <button id="startBtn" onclick="if(window.CF&&CF.Main)CF.Main.start();" autofocus>Dive In</button>
+    </div>
+
+    <div id="winScreen" class="screen hidden">
+      <h1>All Treasures Found!</h1>
+      <p id="winText" class="lede"></p>
+      <button id="againBtn" onclick="if(window.CF&&CF.Main)CF.Main.start();">Play Again</button>
+    </div>
+
+    <div id="loseScreen" class="screen hidden">
+      <h1 class="danger">Eaten by a Shark!</h1>
+      <p id="loseText" class="lede"></p>
+      <button id="retryBtn" onclick="if(window.CF&&CF.Main)CF.Main.start();">Try Again</button>
+    </div>
+  </div>
+
+  <script src="js/lib/three.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/assets.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/render3d.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/shark.js"></script>
+  <script src="js/critters.js"></script>
+  <script src="js/treasure.js"></script>
+  <script src="js/decoy.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    function bootGame() {
+      if (window.CF && window.CF.Main && !window.CF.Main.hasBooted) {
+        window.CF.Main.hasBooted = true;
+        try {
+          CF.Main.init();
+        } catch (e) {
+          console.error("Game boot error:", e);
+          var b = document.createElement('div');
+          b.style.cssText = 'position:fixed;top:20px;left:20px;right:20px;background:#c92a2a;color:#fff;padding:16px;border-radius:8px;font-family:sans-serif;z-index:999999;';
+          b.innerHTML = '<b>Initialization Error:</b> ' + e.message;
+          document.body.appendChild(b);
+        }
+      }
+    }
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      bootGame();
+    } else {
+      document.addEventListener('DOMContentLoaded', bootGame);
+      window.addEventListener('load', bootGame);
+    }
+    setTimeout(bootGame, 300);
+  </script>
+</body>
+</html>
