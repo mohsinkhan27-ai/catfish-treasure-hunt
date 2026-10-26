@@ -41,19 +41,22 @@ CF.Input = {
     var viewBtn = document.getElementById('touchViewBtn');
     var mapBtn = document.getElementById('touchMapBtn');
     var toggleTouchBtn = document.getElementById('toggleTouchBtn');
+    var touchToggleLabel = document.getElementById('touchToggleLabel');
 
     if (!controls) return;
 
-    // Auto-show touch controls on touch devices or tablet viewport
-    if (this.isTouchDevice || window.innerWidth <= 1024) {
-      controls.classList.add('visible');
-    }
+    // Always visible by default on mobile/tablet and ready to play
+    controls.classList.add('visible');
+    if (touchToggleLabel) touchToggleLabel.textContent = '📱 Touch ON';
 
     if (toggleTouchBtn) {
       toggleTouchBtn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        controls.classList.toggle('visible');
+        var isVis = controls.classList.toggle('visible');
+        if (touchToggleLabel) {
+          touchToggleLabel.textContent = isVis ? '📱 Touch ON' : '📱 Touch OFF';
+        }
       });
     }
 
@@ -63,8 +66,8 @@ CF.Input = {
     var maxRadius = 42; // Maximum stick radius in px
 
     var updateJoystick = function (clientX, clientY) {
-      if (!baseRect && joystickBase) baseRect = joystickBase.getBoundingClientRect();
-      if (!baseRect) return;
+      if (!joystickBase) return;
+      baseRect = joystickBase.getBoundingClientRect();
 
       var centerX = baseRect.left + baseRect.width / 2;
       var centerY = baseRect.top + baseRect.height / 2;
@@ -105,7 +108,6 @@ CF.Input = {
         if (activeTouchId !== null) return;
         var touch = e.changedTouches[0];
         activeTouchId = touch.identifier;
-        baseRect = joystickBase.getBoundingClientRect();
         updateJoystick(touch.clientX, touch.clientY);
       }, { passive: false });
 
@@ -139,7 +141,6 @@ CF.Input = {
       joystickZone.addEventListener('mousedown', function (e) {
         e.preventDefault();
         isMouseDown = true;
-        baseRect = joystickBase.getBoundingClientRect();
         updateJoystick(e.clientX, e.clientY);
       });
 
@@ -181,38 +182,29 @@ CF.Input = {
       btn.addEventListener('mouseup', handleUp);
     };
 
-    // Swim Up button
+    // Swim Up button (held)
     bindTouchBtn(upBtn, function () { self.touchAxis.z = 1; }, function () { if (self.touchAxis.z > 0) self.touchAxis.z = 0; });
-    // Dive Down button
+    // Dive Down button (held)
     bindTouchBtn(downBtn, function () { self.touchAxis.z = -1; }, function () { if (self.touchAxis.z < 0) self.touchAxis.z = 0; });
 
-    // Camera View button
+    // Camera View button (tap to toggle - single dispatch)
     bindTouchBtn(viewBtn, function () {
       self.pressed['view'] = true;
-      if (CF.Render3D && CF.Render3D.toggleCameraMode) {
-        CF.Render3D.toggleCameraMode();
-      }
     });
 
-    // Sonar Map button
+    // Sonar Map button (tap to toggle - single dispatch)
     bindTouchBtn(mapBtn, function () {
       self.pressed['map'] = true;
-      if (CF.Map && CF.Map.toggle) {
-        CF.Map.toggle();
-      }
     });
 
-    // Close map if player taps canvas or background
-    var app = document.getElementById('app');
-    if (app) {
-      app.addEventListener('click', function (e) {
-        if (CF.Map && CF.Map.open) {
-          if (!e.target.closest('#touchControls') && !e.target.closest('#startScreen')) {
-            CF.Map.open = false;
-          }
+    // Tap anywhere on the game to close map if open
+    window.addEventListener('pointerdown', function (e) {
+      if (CF.Map && CF.Map.open) {
+        if (!e.target.closest('#touchMapBtn')) {
+          CF.Map.open = false;
         }
-      });
-    }
+      }
+    });
   },
 
   normalize: function (key) {

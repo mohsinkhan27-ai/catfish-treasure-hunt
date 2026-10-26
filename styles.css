@@ -29,12 +29,12 @@ html, body {
   touch-action: none;
 }
 
-@media (max-width: 960px), (max-height: 640px) {
+@media (max-width: 1024px), (max-height: 720px) {
   #app {
-    width: 100vw;
-    height: 100vh;
+    width: min(100vw, calc(100vh * 3 / 2));
+    height: min(100vh, calc(100vw * 2 / 3));
     border-radius: 0;
-    aspect-ratio: unset;
+    box-shadow: none;
   }
 }
 
@@ -227,6 +227,33 @@ button:active {
   transform: scale(0.97);
 }
 
+/* Portrait orientation notice for tablets/mobile */
+.portrait-notice {
+  display: none;
+  position: absolute;
+  top: 65px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(9, 28, 44, 0.85);
+  border: 1px solid rgba(130, 215, 245, 0.4);
+  color: #c4e9f8;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+  z-index: 18;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+@media (orientation: portrait) {
+  .portrait-notice {
+    display: block;
+  }
+}
+
 /* ========================================================
    On-screen Touch Controls for Android Tablet & Touchscreens
    ======================================================== */
@@ -244,7 +271,7 @@ button:active {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 15;
+  z-index: 25;
   display: none;
 }
 
@@ -255,10 +282,10 @@ button:active {
 /* Left: Virtual Joystick */
 .joystick-zone {
   position: absolute;
-  bottom: 24px;
-  left: 24px;
-  width: 140px;
-  height: 140px;
+  bottom: 20px;
+  left: 20px;
+  width: 130px;
+  height: 130px;
   pointer-events: auto;
   touch-action: none;
   display: flex;
@@ -271,9 +298,9 @@ button:active {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(12, 38, 58, 0.55) 0%, rgba(6, 20, 32, 0.8) 100%);
-  border: 2px solid rgba(130, 215, 245, 0.35);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 2px 6px rgba(255, 255, 255, 0.12);
+  background: radial-gradient(circle, rgba(12, 38, 58, 0.65) 0%, rgba(6, 20, 32, 0.88) 100%);
+  border: 2px solid rgba(130, 215, 245, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 2px 6px rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -284,9 +311,9 @@ button:active {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: radial-gradient(circle, #5dd5f8 0%, #2080a8 100%);
-  border: 2px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 16px rgba(80, 210, 255, 0.65);
+  background: radial-gradient(circle, #6be2ff 0%, #1e84ae 100%);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 16px rgba(80, 210, 255, 0.75);
   pointer-events: none;
   transition: transform 0.04s ease-out;
   transform: translate(0px, 0px);
@@ -295,7 +322,7 @@ button:active {
 .joystick-arrow {
   position: absolute;
   font-size: 11px;
-  color: rgba(130, 215, 245, 0.45);
+  color: rgba(130, 215, 245, 0.5);
   pointer-events: none;
 }
 .joystick-arrow-up { top: 6px; }
@@ -306,8 +333,8 @@ button:active {
 /* Right: Touch Action Buttons */
 .touch-actions {
   position: absolute;
-  bottom: 24px;
-  right: 24px;
+  bottom: 20px;
+  right: 20px;
   pointer-events: auto;
   touch-action: none;
 }
@@ -315,53 +342,55 @@ button:active {
 .touch-btn-cluster {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .touch-btn-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: flex-end;
 }
 
 .touch-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px;
+  /* Strictly override generic button properties */
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 16px !important;
   cursor: pointer;
-  border: 1.5px solid rgba(130, 215, 245, 0.35);
-  background: rgba(9, 28, 44, 0.72);
+  border: 1.5px solid rgba(130, 215, 245, 0.45) !important;
+  background: rgba(9, 28, 44, 0.85) !important;
   backdrop-filter: blur(8px);
-  color: #eef1f8;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  color: #eef1f8 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
   transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
-  padding: 0;
-  margin: 0;
 }
 
 .touch-btn-vert {
-  width: 62px;
-  height: 62px;
-  background: linear-gradient(180deg, rgba(20, 58, 88, 0.8), rgba(12, 36, 56, 0.85));
+  width: 64px !important;
+  height: 64px !important;
+  background: linear-gradient(180deg, rgba(22, 66, 98, 0.9), rgba(12, 38, 58, 0.92)) !important;
 }
 
 .touch-btn-util {
-  width: 58px;
-  height: 48px;
-  background: rgba(10, 32, 50, 0.65);
+  width: 60px !important;
+  height: 48px !important;
+  background: rgba(12, 36, 56, 0.8) !important;
 }
 
 .touch-btn:active,
 .touch-btn.active {
   transform: scale(0.92);
-  background: rgba(30, 95, 140, 0.9);
-  border-color: rgba(140, 235, 255, 0.85);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 14px rgba(80, 210, 255, 0.55);
+  background: rgba(30, 100, 150, 0.95) !important;
+  border-color: rgba(140, 240, 255, 0.95) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 16px rgba(80, 220, 255, 0.7) !important;
 }
 
 .touch-icon {
