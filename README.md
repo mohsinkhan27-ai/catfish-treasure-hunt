@@ -20,12 +20,15 @@ Play as a cat-faced fish exploring a vibrant Caribbean coral atoll, hunting hidd
   - 🐠 **Clownfish & Reef Schools**: Distinct orange-and-white clownfish darting above coral heads, plus Blue Tangs, Lemon Tangs, and Neon Tetras.
   - 🪼 **Bioluminescent Jellyfish**: Glowing translucent jellyfish pulsating at various depths.
   - 🪸 **4 Coral Varieties**: Corrugated Brain Corals, solitary Mushroom Corals, glowing Hammer Corals, and flowing Torch Corals.
-- **Apex Shark Threat**: An intelligent cruising shark that tracks and circles when you enter deep water. Escape its grasp before your life drains!
+- **🦈 3 Unique Apex Predators**:
+  - 🦈 **Great White Shark**: Heavy hydrodynamic torpedo body with serrated teeth, patrolling the deep oceanic abyss.
+  - 🔨 **Great Hammerhead Shark**: Distinct T-bar cephalofoil head with wide-set glowing eyes, patrolling seafloor trenches and hunting near buried treasures.
+  - 🐟 **Giant Tiger Barracuda**: Lightning-fast silvery missile predator with tiger flank stripes, lunging at burst speeds in the sunlit upper waters.
 - **3 Camera Modes**: Switch between **3rd Person Follow**, **1st Person (Catfish Eyes)**, and **Bird's Eye Panoramic View** with `V` (or on-screen button).
 - **📱 Touch & Android Tablet Ready**:
   - Virtual analog thumbstick for 360° steering and propulsion.
   - Dedicated on-screen touch buttons for **Swim Up**, **Dive Down**, **Camera View**, and **Sonar Map**.
-  - Responsive layout with touch-scroll prevention.
+  - Adaptive dynamic viewport (`100dvh`) with safe margins ensuring 100% visibility in both portrait and landscape tablet modes.
 
 ---
 

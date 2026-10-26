@@ -131,8 +131,21 @@ CF.Map = {
     m.fill();
     m.restore();
 
-    // Shark blip if chasing
-    if (CF.Shark.state === 'chase') {
+    // Predator blips on Sonar Map when hunting
+    if (CF.Shark.list && CF.Shark.list.length > 0) {
+      for (var pi = 0; pi < CF.Shark.list.length; pi++) {
+        var pred = CF.Shark.list[pi];
+        if (pred.state === 'chase') {
+          var pxBlip = toMX(pred.x);
+          var pzBlip = toMZ(pred.z);
+          // Color code predator types: Great White = Red, Hammerhead = Magenta, Barracuda = Amber
+          m.fillStyle = pred.type === 'barracuda' ? '#ffa200' : (pred.type === 'hammerhead' ? '#ff3366' : '#ff2222');
+          m.beginPath();
+          m.arc(pxBlip, pzBlip, 7, 0, Math.PI * 2);
+          m.fill();
+        }
+      }
+    } else if (CF.Shark.state === 'chase') {
       var spx = toMX(CF.Shark.x);
       var spz = toMZ(CF.Shark.z);
       m.fillStyle = '#ff4444';
