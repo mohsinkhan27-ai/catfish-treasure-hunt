@@ -575,20 +575,29 @@ CF.Player = {
       if (!this.isBreaching) {
         this.isBreaching = true;
         CF.Render3D.splash(this.x, this.z, true);
-        CF.Audio.leap();
-        CF.Audio.splash();
+        if (CF.Audio && CF.Audio.slowMoLeap) CF.Audio.slowMoLeap();
+        else if (CF.Audio) CF.Audio.leap();
       }
 
-      // Gentle buoyant air gravity so the jump lasts 2.5 - 3.2 seconds!
+      // Gentle buoyant air gravity
       this.vy -= 0.11;
       this.speed *= 0.99;
-      // Graceful acrobatic backflip rotation!
-      this.breachFlip += 0.082;
+
+      // Authentic Dolphin Breach Pitch Arc (NO spinning in circles!)
+      // Upward climb: nose points up (+0.42 rad)
+      // Apex: smoothly levels out (0 rad)
+      // Descent: dips downward (-0.48 rad) for clean dive
+      if (this.vy > 1.2) {
+        this.pitch = CF.lerp(this.pitch, 0.42, 0.08);
+      } else if (this.vy < -1.2) {
+        this.pitch = CF.lerp(this.pitch, -0.48, 0.08);
+      } else {
+        this.pitch = CF.lerp(this.pitch, 0.0, 0.08);
+      }
 
       // Water re-entry dive
       if (this.y + this.vy < surfaceY) {
         this.isBreaching = false;
-        this.breachFlip = 0;
         this.vy = Math.max(this.vy, -4.2);
         CF.Render3D.splash(this.x, this.z, false);
         CF.Audio.splash();
@@ -603,19 +612,18 @@ CF.Player = {
         this.isBreaching = true;
         this.vy = Math.max(this.vy * 1.6, 9.4);
         CF.Render3D.splash(this.x, this.z, true);
-        CF.Audio.leap();
-        CF.Audio.splash();
+        if (CF.Audio && CF.Audio.slowMoLeap) CF.Audio.slowMoLeap();
+        else if (CF.Audio) CF.Audio.leap();
       } else {
         this.y = CF.clamp(this.y, floorY, surfaceY - 2);
         this.isBreaching = false;
-        this.breachFlip = 0;
       }
     }
 
     // 7. Update Mesh Transform & Smooth Swimming Wag
     if (this.mesh) {
       this.mesh.position.set(this.x, this.y, this.z);
-      this.mesh.rotation.set(-this.pitch + this.breachFlip, this.yaw, this.roll, 'YXZ');
+      this.mesh.rotation.set(-this.pitch, this.yaw, this.roll, 'YXZ');
 
       var t = CF.Render3D.clock || performance.now();
       var isMoving = Math.abs(this.speed) > 0.2 || Math.abs(this.vy) > 0.2;

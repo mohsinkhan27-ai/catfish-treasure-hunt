@@ -99,6 +99,13 @@ CF.Audio = {
     setTimeout(function () { self.tone(880, 0.18, 'sine', 0.09); }, 70);
   },
 
+  slowMoLeap: function () {
+    var self = this;
+    [261, 329, 392, 523, 659].forEach(function (f, i) {
+      setTimeout(function () { self.tone(f, 0.5, 'sine', 0.08); }, i * 110);
+    });
+  },
+
   snorkel: function () {
     var self = this;
     this.tone(520, 0.06, 'sine', 0.04);

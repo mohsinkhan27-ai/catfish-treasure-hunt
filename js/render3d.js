@@ -153,55 +153,86 @@ CF.Render3D = {
 
   buildWaterSurface: function () {
     var C = CF.CONFIG;
-    var geom = new THREE.PlaneGeometry(C.WORLD_SIZE + 1000, C.WORLD_SIZE + 1000, 24, 24);
+    var geom = new THREE.PlaneGeometry(C.WORLD_SIZE + 1000, C.WORLD_SIZE + 1000, 32, 32);
     geom.rotateX(Math.PI / 2);
     geom.translate(0, C.WORLD_SURFACE, 0);
 
     var mat = new THREE.MeshBasicMaterial({
-      color: 0x5de0ff,
+      color: 0x2ecce5,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.42,
       side: THREE.DoubleSide
     });
 
     var surface = new THREE.Mesh(geom, mat);
     this.scene.add(surface);
+
+    // Glistening white seafoam ripple rings around the surface
+    var foamGeom = new THREE.RingGeometry(8, 22, 16);
+    foamGeom.rotateX(Math.PI / 2);
+    var foamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
+    for (var f = 0; f < 8; f++) {
+      var foam = new THREE.Mesh(foamGeom, foamMat);
+      var fx = (f % 2 === 0 ? 1 : -1) * CF.rand(40, 180);
+      var fz = (f < 4 ? 1 : -1) * CF.rand(40, 180);
+      foam.position.set(fx, C.WORLD_SURFACE + 0.3, fz);
+      this.scene.add(foam);
+    }
   },
 
   buildSkyAndSun: function () {
     var C = CF.CONFIG;
-    // 1. Radiant Cartoon Sun in the open sky
-    var sunGeom = new THREE.SphereGeometry(65, 16, 16);
-    var sunMat = new THREE.MeshBasicMaterial({ color: 0xfff4b8 });
+    // 1. Giant Radiant Sun in the bright sky directly above the central oceanic reef!
+    var sunGeom = new THREE.SphereGeometry(140, 20, 20);
+    var sunMat = new THREE.MeshBasicMaterial({ color: 0xfffa70 });
     var sunMesh = new THREE.Mesh(sunGeom, sunMat);
-    sunMesh.position.set(400, 680, 250);
+    sunMesh.position.set(0, 520, 320);
     this.scene.add(sunMesh);
 
-    var haloGeom = new THREE.SphereGeometry(110, 16, 16);
-    var haloMat = new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0.28 });
+    // Golden luminous halo
+    var haloGeom = new THREE.SphereGeometry(280, 20, 20);
+    var haloMat = new THREE.MeshBasicMaterial({ color: 0xffdf55, transparent: true, opacity: 0.42 });
     var haloMesh = new THREE.Mesh(haloGeom, haloMat);
     haloMesh.position.copy(sunMesh.position);
     this.scene.add(haloMesh);
 
-    // 2. Fluffy Stylized Low-Poly Clouds scattered across the upper atmosphere
-    var cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x223344 });
+    // 12 Sunbeam Rays streaming down into the ocean
+    var rayGeom = new THREE.ConeGeometry(35, 450, 6, 1, true);
+    var rayMat = new THREE.MeshBasicMaterial({ color: 0xfff6c2, transparent: true, opacity: 0.12, side: THREE.DoubleSide });
+    for (var r = 0; r < 8; r++) {
+      var ray = new THREE.Mesh(rayGeom, rayMat);
+      var rAngle = (r / 8) * Math.PI * 2;
+      ray.position.set(Math.sin(rAngle) * 70, 320, 320 + Math.cos(rAngle) * 70);
+      ray.rotation.x = 0.22;
+      ray.rotation.z = Math.sin(rAngle) * 0.18;
+      this.scene.add(ray);
+    }
+
+    // 2. Fluffy White Cartoon Clouds floating at jump altitude (y = 170 to 240) right above the reef!
+    var cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x334455 });
     var sphereGeom = new THREE.SphereGeometry(1, 8, 8);
 
-    for (var c = 0; c < 14; c++) {
-      var cloudGroup = new THREE.Group();
-      var cx = CF.rand(-C.WORLD_HALF + 300, C.WORLD_HALF - 300);
-      var cz = CF.rand(-C.WORLD_HALF + 300, C.WORLD_HALF - 300);
-      var cy = CF.rand(240, 360);
+    var cloudLocs = [
+      { x: -120, y: 195, z: 60 },
+      { x: 90,   y: 210, z: -40 },
+      { x: -50,  y: 230, z: -150 },
+      { x: 180,  y: 190, z: 160 },
+      { x: -220, y: 220, z: 220 },
+      { x: 40,   y: 240, z: 280 }
+    ];
 
-      var puffCount = CF.randInt(4, 7);
+    for (var c = 0; c < cloudLocs.length; c++) {
+      var cl = cloudLocs[c];
+      var cloudGroup = new THREE.Group();
+      var puffCount = CF.randInt(5, 8);
       for (var p = 0; p < puffCount; p++) {
         var puff = new THREE.Mesh(sphereGeom, cloudMat);
-        var pSize = CF.rand(25, 48);
-        puff.scale.set(pSize * 1.3, pSize * 0.75, pSize);
-        puff.position.set((p - puffCount / 2) * 26 + CF.rand(-10, 10), CF.rand(-6, 8), CF.rand(-12, 12));
+        var pSize = CF.rand(30, 52);
+        puff.scale.set(pSize * 1.35, pSize * 0.8, pSize);
+        puff.position.set((p - puffCount / 2) * 28 + CF.rand(-8, 8), CF.rand(-6, 8), CF.rand(-14, 14));
         cloudGroup.add(puff);
       }
-      cloudGroup.position.set(cx, cy, cz);
+      cloudGroup.position.set(cl.x, cl.y, cl.z);
       this.scene.add(cloudGroup);
     }
   },
@@ -212,7 +243,7 @@ CF.Render3D = {
     var C = CF.CONFIG;
     var surfaceY = C.WORLD_SURFACE; // 80
 
-    // 1. Grand Royal Galleon "Sea Queen"
+    // 1. Grand Royal Galleon "Sea Queen" placed prominently at the central atoll reef!
     var galleon = new THREE.Group();
     var woodDark = new THREE.MeshLambertMaterial({ color: 0x4a2c11 });
     var woodDeck = new THREE.MeshLambertMaterial({ color: 0xc49a6c });
@@ -220,10 +251,10 @@ CF.Render3D = {
     var sailMat = new THREE.MeshLambertMaterial({ color: 0xfdfaf0, side: THREE.DoubleSide });
     var redFlag = new THREE.MeshLambertMaterial({ color: 0xdd2233 });
 
-    // Hull (lower hull sits partly in water, upper hull reaches y+16)
+    // Hull (sits in water at y = 80, upper hull rises to y = 96)
     var hullGeom = new THREE.CylinderGeometry(14, 18, 70, 8);
     hullGeom.rotateX(Math.PI / 2);
-    hullGeom.scale(1.1, 0.7, 1.25);
+    hullGeom.scale(1.15, 0.72, 1.3);
     var hull = new THREE.Mesh(hullGeom, woodDark);
     hull.position.set(0, -2, 0);
     galleon.add(hull);
@@ -253,51 +284,52 @@ CF.Render3D = {
     bowsprit.position.set(0, 14, 45);
     galleon.add(bowsprit);
 
-    // 2 Tall Masts with Billowing Square Sails
-    var mastGeom1 = new THREE.CylinderGeometry(1.4, 2.2, 95, 8);
+    // 2 Tall Masts with Billowing Square Sails reaching to y = 180!
+    var mastGeom1 = new THREE.CylinderGeometry(1.5, 2.4, 98, 8);
     var mast1 = new THREE.Mesh(mastGeom1, woodDark);
     mast1.position.set(0, 52, 6);
     galleon.add(mast1);
 
-    var mastGeom2 = new THREE.CylinderGeometry(1.2, 1.8, 80, 8);
+    var mastGeom2 = new THREE.CylinderGeometry(1.3, 2.0, 84, 8);
     var mast2 = new THREE.Mesh(mastGeom2, woodDark);
     mast2.position.set(0, 46, -18);
     galleon.add(mast2);
 
-    // Main Yardarms & Billowing Sails
-    var sailGeom1 = new THREE.PlaneGeometry(38, 28, 4, 4);
+    // Billowing White Square Sails
+    var sailGeom1 = new THREE.PlaneGeometry(42, 32, 4, 4);
     var pos1 = sailGeom1.attributes.position;
     for (var si = 0; si < pos1.count; si++) {
-      var sz = Math.sin((pos1.getY(si) / 28 + 0.5) * Math.PI) * 4.5;
+      var sz = Math.sin((pos1.getY(si) / 32 + 0.5) * Math.PI) * 5.5;
       pos1.setZ(si, sz);
     }
     sailGeom1.computeVertexNormals();
 
     var sail1 = new THREE.Mesh(sailGeom1, sailMat);
-    sail1.position.set(0, 58, 6);
+    sail1.position.set(0, 60, 6);
     galleon.add(sail1);
 
-    var sailGeom2 = new THREE.PlaneGeometry(30, 22, 4, 4);
+    var sailGeom2 = new THREE.PlaneGeometry(34, 25, 4, 4);
     var sail2 = new THREE.Mesh(sailGeom2, sailMat);
-    sail2.position.set(0, 50, -18);
+    sail2.position.set(0, 52, -18);
     galleon.add(sail2);
 
     // Crow's Nest Lookout Barrel on Main Mast
-    var nestGeom = new THREE.CylinderGeometry(4.5, 3.8, 6, 8, 1, true);
+    var nestGeom = new THREE.CylinderGeometry(4.8, 4.0, 6.5, 8, 1, true);
     var nest = new THREE.Mesh(nestGeom, woodDark);
-    nest.position.set(0, 85, 6);
+    nest.position.set(0, 86, 6);
     galleon.add(nest);
 
-    // Royal flag at mast tip
-    var flagGeom = new THREE.PlaneGeometry(10, 6);
+    // Red Royal Pennant Flag
+    var flagGeom = new THREE.PlaneGeometry(12, 7);
     var flag = new THREE.Mesh(flagGeom, redFlag);
-    flag.position.set(5, 98, 6);
+    flag.position.set(6, 100, 6);
     galleon.add(flag);
 
-    galleon.position.set(-190, surfaceY, 130);
-    galleon.rotation.y = 0.45;
+    // Placed right beside central reef and spawn point!
+    galleon.position.set(-60, surfaceY, 90);
+    galleon.rotation.y = 0.55;
     scene.add(galleon);
-    this.surfaceShips.push({ mesh: galleon, baseRotY: 0.45, bobPhase: 0 });
+    this.surfaceShips.push({ mesh: galleon, baseRotY: 0.55, bobPhase: 0 });
 
     // 2. Coastal Fishing Trawler "Ocean Explorer"
     var trawler = new THREE.Group();
@@ -326,12 +358,33 @@ CF.Render3D = {
     craneMast.rotation.x = -0.15;
     trawler.add(craneMast);
 
-    trawler.position.set(320, surfaceY, -170);
-    trawler.rotation.y = -1.1;
+    trawler.position.set(130, surfaceY, -85);
+    trawler.rotation.y = -1.2;
     scene.add(trawler);
-    this.surfaceShips.push({ mesh: trawler, baseRotY: -1.1, bobPhase: 1.8 });
+    this.surfaceShips.push({ mesh: trawler, baseRotY: -1.2, bobPhase: 1.8 });
 
-    // 3. Tropical Twin-Hull Sailing Catamaran
+    // 3. Island Exploration Schooner
+    var schooner = new THREE.Group();
+    var sHull = new THREE.Mesh(new THREE.BoxGeometry(18, 12, 50), woodDark);
+    sHull.position.set(0, 2, 0);
+    schooner.add(sHull);
+    var sDeck = new THREE.Mesh(new THREE.BoxGeometry(17, 2, 48), woodDeck);
+    sDeck.position.set(0, 7, 0);
+    schooner.add(sDeck);
+    var sMast = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.5, 65, 6), woodDark);
+    sMast.position.set(0, 36, 0);
+    schooner.add(sMast);
+    var sSail = new THREE.Mesh(new THREE.PlaneGeometry(28, 42), sailMat);
+    sSail.position.set(0, 38, -6);
+    sSail.rotation.y = Math.PI / 2;
+    schooner.add(sSail);
+
+    schooner.position.set(-160, surfaceY, -130);
+    schooner.rotation.y = 0.8;
+    scene.add(schooner);
+    this.surfaceShips.push({ mesh: schooner, baseRotY: 0.8, bobPhase: 2.6 });
+
+    // 4. Tropical Twin-Hull Sailing Catamaran
     var catamaran = new THREE.Group();
     var pontoonGeom = new THREE.CylinderGeometry(3.5, 4.0, 52, 8);
     pontoonGeom.rotateX(Math.PI / 2);
@@ -362,10 +415,33 @@ CF.Render3D = {
     var cSail = new THREE.Mesh(cSailGeom, new THREE.MeshLambertMaterial({ color: 0x00f0ff, side: THREE.DoubleSide }));
     catamaran.add(cSail);
 
-    catamaran.position.set(150, surfaceY, 390);
+    catamaran.position.set(110, surfaceY, 240);
     catamaran.rotation.y = 1.6;
     scene.add(catamaran);
     this.surfaceShips.push({ mesh: catamaran, baseRotY: 1.6, bobPhase: 3.2 });
+
+    // 5. Blinking Navigation Channel Buoys
+    var buoyGeom = new THREE.CylinderGeometry(1.6, 2.6, 7, 8);
+    var buoyMat = new THREE.MeshLambertMaterial({ color: 0xff9900 });
+    var lampMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
+    var buoyLocs = [
+      { x: -90, z: -20 },
+      { x: 60,  z: 110 },
+      { x: -30, z: 210 },
+      { x: 190, z: 80 }
+    ];
+    for (var b = 0; b < buoyLocs.length; b++) {
+      var bg = new THREE.Group();
+      var bMesh = new THREE.Mesh(buoyGeom, buoyMat);
+      bMesh.position.set(0, 2, 0);
+      bg.add(bMesh);
+      var lamp = new THREE.Mesh(new THREE.SphereGeometry(1.1, 6, 6), lampMat);
+      lamp.position.set(0, 6.2, 0);
+      bg.add(lamp);
+      bg.position.set(buoyLocs[b].x, surfaceY, buoyLocs[b].z);
+      scene.add(bg);
+      this.surfaceShips.push({ mesh: bg, baseRotY: 0, bobPhase: b * 1.2 });
+    }
   },
 
   buildKelpForest: function () {
@@ -838,17 +914,17 @@ CF.Render3D = {
     var isBreaching = (CF.Player && CF.Player.y > C.WORLD_SURFACE);
     var targetBgColor = isBreaching ? new THREE.Color(0x38bdf8) : new THREE.Color(0x0c7da8);
     var targetFogColor = isBreaching ? new THREE.Color(0x7dd3fc) : new THREE.Color(0x0c7da8);
-    var targetFogNear = isBreaching ? 3200 : 1400;
-    var targetFogFar = isBreaching ? 10000 : 5500;
+    var targetFogNear = isBreaching ? 6000 : 1400;
+    var targetFogFar = isBreaching ? 25000 : 5500;
 
     if (this.scene) {
       if (this.scene.background) {
-        this.scene.background.lerp(targetBgColor, 0.08);
+        this.scene.background.lerp(targetBgColor, isBreaching ? 0.25 : 0.08);
       }
       if (this.scene.fog) {
-        this.scene.fog.color.lerp(targetFogColor, 0.08);
-        this.scene.fog.near = CF.lerp(this.scene.fog.near, targetFogNear, 0.08);
-        this.scene.fog.far = CF.lerp(this.scene.fog.far, targetFogFar, 0.08);
+        this.scene.fog.color.lerp(targetFogColor, isBreaching ? 0.25 : 0.08);
+        this.scene.fog.near = CF.lerp(this.scene.fog.near, targetFogNear, isBreaching ? 0.25 : 0.08);
+        this.scene.fog.far = CF.lerp(this.scene.fog.far, targetFogFar, isBreaching ? 0.25 : 0.08);
       }
     }
 
@@ -940,13 +1016,26 @@ CF.Render3D = {
           this.camera.lookAt(heroLook);
 
         } else if (CF.Player && CF.Player.y > C.WORLD_SURFACE) {
-          // Panoramic Airborne Breach Camera: pulls back & frames soaring jump with ship & sky!
-          var skyCamTarget = pm.position.clone()
-            .sub(forward.clone().multiplyScalar(190))
-            .add(right.clone().multiplyScalar(35))
-            .add(new THREE.Vector3(0, 20, 0));
-          this.camera.position.lerp(skyCamTarget, 0.06);
-          var skyLook = pm.position.clone().add(forward.clone().multiplyScalar(25));
+          // Rock-Solid Cinematic Airborne Camera!
+          // Uses pure horizontal heading so camera NEVER rolls or tumbles with fish!
+          var p = CF.Player;
+          var yaw = p.yaw;
+          var hFwdX = Math.sin(yaw);
+          var hFwdZ = Math.cos(yaw);
+          var hRgtX = Math.cos(yaw);
+          var hRgtZ = -Math.sin(yaw);
+
+          // Stable camera sits behind and to the side, framing the catfish leaping
+          // with the sea surface and ships below, and the brilliant sunny sky and clouds above!
+          var skyCamTarget = new THREE.Vector3(
+            p.x - hFwdX * 160 + hRgtX * 42,
+            Math.max(C.WORLD_SURFACE + 35, p.y * 0.72 + 25),
+            p.z - hFwdZ * 160 + hRgtZ * 42
+          );
+          this.camera.position.lerp(skyCamTarget, 0.09);
+
+          // Focus directly on the soaring catfish!
+          var skyLook = new THREE.Vector3(p.x, p.y + 4, p.z);
           this.camera.lookAt(skyLook);
 
         } else {

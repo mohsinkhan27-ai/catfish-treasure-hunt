@@ -66,10 +66,17 @@ CF.Main = {
     this.last = now;
     if (dt > 100) dt = 100;
 
-    this.t += dt;
+    // Cinematic Slow Motion during Surface Jump!
+    var isBreaching = (CF.Player && CF.Player.y > CF.CONFIG.WORLD_SURFACE);
+    var targetScale = isBreaching ? 0.32 : 1.0;
+    this.timeScale = this.timeScale || 1.0;
+    this.timeScale = CF.lerp(this.timeScale, targetScale, 0.18);
+
+    var scaledDt = dt * this.timeScale;
+    this.t += scaledDt;
 
     if (this.state === 'play') {
-      this.acc += dt;
+      this.acc += scaledDt;
       if (this.acc > 100) this.acc = 100;
       while (this.acc >= this.STEP) {
         this.update();
@@ -78,7 +85,7 @@ CF.Main = {
       }
     }
 
-    CF.Render3D.update(dt / 1000, this.t);
+    CF.Render3D.update(scaledDt / 1000, this.t);
     this.render();
 
     requestAnimationFrame(function (n) { self.loop(n); });
@@ -239,7 +246,7 @@ CF.Main = {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowBlur = 0;
-    ctx.fillText('☀️ SOARING THE SUNNY SKIES! ⛵', cx, cy);
+    ctx.fillText('☀️ SLOW-MO SKY BREACH! ⛵', cx, cy);
 
     ctx.restore();
   }
