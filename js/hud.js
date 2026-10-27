@@ -49,8 +49,19 @@ CF.HUD = {
     }
 
     if (this.els.wardrobeCloseBtn) {
-      this.els.wardrobeCloseBtn.addEventListener('click', function () {
+      var closeFn = function (e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         self.closeWardrobe();
+      };
+      this.els.wardrobeCloseBtn.addEventListener('click', closeFn);
+      this.els.wardrobeCloseBtn.addEventListener('touchend', closeFn);
+    }
+
+    if (this.els.wardrobeModal) {
+      this.els.wardrobeModal.addEventListener('click', function (e) {
+        if (e.target === self.els.wardrobeModal) {
+          self.closeWardrobe();
+        }
       });
     }
 
@@ -88,6 +99,7 @@ CF.HUD = {
     if (this.els.wardrobeModal) {
       this.renderWardrobe();
       this.els.wardrobeModal.classList.remove('hidden');
+      this.els.wardrobeModal.style.display = 'flex';
     }
   },
 
@@ -95,6 +107,7 @@ CF.HUD = {
     this.wardrobeOpen = false;
     if (this.els.wardrobeModal) {
       this.els.wardrobeModal.classList.add('hidden');
+      this.els.wardrobeModal.style.display = 'none';
     }
   },
 
@@ -165,6 +178,7 @@ CF.HUD = {
     if (descEl) descEl.textContent = reward.desc;
 
     this.els.unlockToast.classList.remove('hidden');
+    this.els.unlockToast.style.display = 'flex';
     this.els.unlockToast.classList.add('pop-in');
 
     if (this.toastTimer) clearTimeout(this.toastTimer);
@@ -172,6 +186,7 @@ CF.HUD = {
       if (self.els.unlockToast) {
         self.els.unlockToast.classList.add('hidden');
         self.els.unlockToast.classList.remove('pop-in');
+        self.els.unlockToast.style.display = 'none';
       }
     }, 4500);
   },

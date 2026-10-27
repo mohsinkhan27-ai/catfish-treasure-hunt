@@ -165,8 +165,11 @@ canvas#overlay {
   overflow-y: auto;
 }
 
-.screen.hidden {
-  display: none;
+.hidden,
+.screen.hidden,
+.wardrobe-modal.hidden,
+.unlock-toast.hidden {
+  display: none !important;
 }
 
 .screen h1 {
@@ -556,12 +559,13 @@ button:active {
 }
 
 .wardrobe-close-btn {
-  background: rgba(255, 255, 255, 0.12) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  background: rgba(220, 50, 50, 0.85) !important;
+  border: 2px solid #ffffff !important;
   color: #ffffff !important;
-  font-size: 1.1rem !important;
-  width: 36px !important;
-  height: 36px !important;
+  font-size: 1.25rem !important;
+  font-weight: 800 !important;
+  width: 44px !important;
+  height: 44px !important;
   border-radius: 50% !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -569,12 +573,16 @@ button:active {
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer;
-  transition: all 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  transition: transform 0.1s ease, background 0.15s ease;
+  z-index: 100;
+  touch-action: manipulation;
 }
 
-.wardrobe-close-btn:hover {
-  background: rgba(230, 50, 50, 0.8) !important;
-  border-color: #ff8888 !important;
+.wardrobe-close-btn:hover,
+.wardrobe-close-btn:active {
+  background: #ff3333 !important;
+  transform: scale(1.08);
 }
 
 .wardrobe-subtitle {
