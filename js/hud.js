@@ -26,6 +26,15 @@ CF.HUD = {
     this.els.wardrobeGrid = document.getElementById('wardrobeGrid');
     this.els.unlockToast = document.getElementById('unlockToast');
     this.els.touchWardrobeBtn = document.getElementById('touchWardrobeBtn');
+    this.els.bossWin = document.getElementById('bossWinScreen');
+    this.els.bossWinText = document.getElementById('bossWinText');
+    this.els.bossAgainBtn = document.getElementById('bossAgainBtn');
+
+    if (this.els.bossAgainBtn) {
+      this.els.bossAgainBtn.addEventListener('click', function () {
+        if (CF.Main) CF.Main.start();
+      });
+    }
 
     if (this.els.viewBtn) {
       this.els.viewBtn.addEventListener('click', function () {
@@ -256,6 +265,10 @@ CF.HUD = {
     if (this.els.start) this.els.start.classList.add('hidden');
     if (this.els.win) this.els.win.classList.add('hidden');
     if (this.els.lose) this.els.lose.classList.add('hidden');
+    if (this.els.bossWin) {
+      this.els.bossWin.classList.add('hidden');
+      this.els.bossWin.style.display = 'none';
+    }
     this.closeWardrobe();
   },
 
@@ -263,6 +276,16 @@ CF.HUD = {
     var C = CF.CONFIG;
     this.els.winText.textContent = 'You found all ' + C.TREASURE_COUNT + ' treasures in ' + seconds.toFixed(1) + 's!';
     this.els.win.classList.remove('hidden');
+  },
+
+  showBossWin: function (seconds) {
+    if (this.els.bossWinText) {
+      this.els.bossWinText.textContent = 'You found the Bubble Blaster in the treasure chest and destroyed the Giant Abyssal Octopus in ' + seconds.toFixed(1) + 's! You saved the coral reef and won the game!';
+    }
+    if (this.els.bossWin) {
+      this.els.bossWin.classList.remove('hidden');
+      this.els.bossWin.style.display = 'flex';
+    }
   },
 
   showLose: function (found, total) {

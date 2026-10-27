@@ -113,6 +113,7 @@ CF.Treasure = {
   },
 
   ACCESSORIES: [
+    { id: 'bubblegun', name: '🫧 Dual Bubble Blaster Gun', icon: '🫧', desc: 'Twin bubble cannons! Blast bubble torpedoes with [F] or [FIRE] to destroy the Giant Octopus on the seafloor!' },
     { id: 'pirate', name: 'Pirate Hat & Eyepatch', icon: '🏴‍☠️', desc: 'Ahoy Captain! Stylish black bicorne with gold trim and authentic eyepatch.' },
     { id: 'scuba', name: 'Scuba Mask & Snorkel', icon: '🤿', desc: 'Deep-sea diver goggles with yellow breathing snorkel tube and bubble sounds!' },
     { id: 'crown', name: 'Golden Crown', icon: '👑', desc: 'A royal golden crown with ruby gems and shimmering light fit for ocean royalty.' },

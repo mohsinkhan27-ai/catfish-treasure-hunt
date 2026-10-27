@@ -38,6 +38,7 @@ CF.Input = {
     var joystickThumb = document.getElementById('joystickThumb');
     var upBtn = document.getElementById('touchUpBtn');
     var downBtn = document.getElementById('touchDownBtn');
+    var fireBtn = document.getElementById('touchFireBtn');
     var viewBtn = document.getElementById('touchViewBtn');
     var mapBtn = document.getElementById('touchMapBtn');
     var toggleTouchBtn = document.getElementById('toggleTouchBtn');
@@ -187,6 +188,14 @@ CF.Input = {
     // Dive Down button (held)
     bindTouchBtn(downBtn, function () { self.touchAxis.z = -1; }, function () { if (self.touchAxis.z < 0) self.touchAxis.z = 0; });
 
+    // Bubble Fire button (tap or held to stream bubble torpedoes!)
+    bindTouchBtn(fireBtn, function () {
+      self.pressed['fire'] = true;
+      self.held['fire'] = true;
+    }, function () {
+      self.held['fire'] = false;
+    });
+
     // Camera View button (tap to toggle - single dispatch)
     bindTouchBtn(viewBtn, function () {
       self.pressed['view'] = true;
@@ -197,12 +206,16 @@ CF.Input = {
       self.pressed['map'] = true;
     });
 
-    // Tap anywhere on the game to close map if open
+    // Tap anywhere on the game to close map if open, or click canvas to fire
     window.addEventListener('pointerdown', function (e) {
       if (CF.Map && CF.Map.open) {
         if (!e.target.closest('#touchMapBtn')) {
           CF.Map.open = false;
         }
+        return;
+      }
+      if (e.target.id === 'overlay' || e.target.id === 'game') {
+        self.pressed['fire'] = true;
       }
     });
   },
@@ -215,6 +228,7 @@ CF.Input = {
       case 'ArrowRight': case 'd': case 'D': return 'right';
       case ' ': case 'e': case 'E': return 'ascend';
       case 'Shift': case 'q': case 'Q': case 'c': case 'C': return 'descend';
+      case 'f': case 'F': case 'b': case 'B': case 'x': case 'X': return 'fire';
       case 'v': case 'V': return 'view';
       case 'm': case 'M': return 'map';
       case 'Escape': return 'escape';

@@ -742,3 +742,106 @@ button:active {
   border: 1px dashed rgba(255, 255, 255, 0.2);
 }
 
+/* ========================================================
+   Giant Abyssal Octopus Boss Bar & Weapons
+   ======================================================== */
+.boss-bar-container {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 380px;
+  max-width: 90vw;
+  background: rgba(14, 5, 22, 0.90);
+  border: 1.5px solid rgba(255, 50, 110, 0.7);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 16px rgba(230, 20, 80, 0.35);
+  border-radius: 12px;
+  padding: 8px 14px;
+  z-index: 22;
+  backdrop-filter: blur(8px);
+  user-select: none;
+}
+
+.boss-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.boss-icon {
+  font-size: 1.2rem;
+}
+
+.boss-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #ff99bb;
+  flex: 1;
+}
+
+.boss-state-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #c4d7e5;
+  white-space: nowrap;
+}
+
+.badge-danger {
+  background: rgba(220, 20, 60, 0.8) !important;
+  color: #fff !important;
+  animation: pulse-danger 1s infinite alternate;
+}
+
+.badge-safe {
+  background: rgba(20, 140, 220, 0.75) !important;
+  color: #e0f4ff !important;
+}
+
+@keyframes pulse-danger {
+  from { box-shadow: 0 0 4px rgba(255, 40, 80, 0.6); }
+  to { box-shadow: 0 0 12px rgba(255, 40, 80, 1); }
+}
+
+.boss-hp-track {
+  width: 100%;
+  height: 9px;
+  background: rgba(40, 10, 25, 0.85);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 50, 110, 0.35);
+}
+
+.boss-hp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff2a6d, #ff8c00);
+  border-radius: 4px;
+  transition: width 0.15s ease;
+  box-shadow: 0 0 8px rgba(255, 50, 110, 0.7);
+}
+
+/* Touch Fire Button */
+.touch-btn-fire {
+  width: 58px !important;
+  height: 58px !important;
+  background: linear-gradient(180deg, rgba(20, 80, 110, 0.92), rgba(10, 48, 70, 0.95)) !important;
+  border-color: rgba(0, 220, 255, 0.6) !important;
+}
+
+.touch-btn-fire.unlocked-glow {
+  background: linear-gradient(180deg, rgba(0, 160, 220, 0.95), rgba(150, 30, 180, 0.95)) !important;
+  border-color: rgba(120, 255, 255, 0.95) !important;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.8), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+  animation: pulse-fire 1.4s infinite alternate;
+}
+
+@keyframes pulse-fire {
+  from { transform: scale(1.0); box-shadow: 0 0 10px rgba(0, 240, 255, 0.6); }
+  to { transform: scale(1.06); box-shadow: 0 0 22px rgba(0, 240, 255, 0.95), 0 0 12px rgba(255, 80, 200, 0.7); }
+}
+

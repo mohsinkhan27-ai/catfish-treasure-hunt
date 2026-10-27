@@ -154,6 +154,35 @@ CF.Map = {
       m.fill();
     }
 
+    // Giant Octopus Boss Lair indicator on Sonar Map
+    if (CF.Octopus) {
+      var ox = toMX(CF.Octopus.x);
+      var oz = toMZ(CF.Octopus.z);
+      if (CF.Octopus.alive) {
+        var oPulse = 0.5 + 0.5 * Math.sin(t * 0.007);
+        m.beginPath();
+        m.arc(ox, oz, 16 + oPulse * 8, 0, Math.PI * 2);
+        m.fillStyle = 'rgba(230, 20, 100, ' + (0.15 + oPulse * 0.15) + ')';
+        m.fill();
+        m.strokeStyle = '#ff2a6d';
+        m.lineWidth = 2;
+        m.stroke();
+
+        m.font = '16px system-ui, sans-serif';
+        m.textAlign = 'center';
+        m.fillText('🐙', ox, oz + 5);
+
+        m.font = '700 11px system-ui, sans-serif';
+        m.fillStyle = '#ff6b9d';
+        m.fillText('KRAKEN LAIR (Floor)', ox, oz + 22);
+      } else {
+        m.fillStyle = '#51cf66';
+        m.font = '700 12px system-ui, sans-serif';
+        m.textAlign = 'center';
+        m.fillText('🐙✓ DEFEATED', ox, oz + 4);
+      }
+    }
+
     // Depth and status info
     var depthM = Math.round(Math.abs(CF.Player.y));
     m.textAlign = 'left';

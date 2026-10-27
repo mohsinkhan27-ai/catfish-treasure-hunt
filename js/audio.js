@@ -114,5 +114,40 @@ CF.Audio = {
 
   jetstream: function () {
     this.tone(320, 0.15, 'triangle', 0.05);
+  },
+
+  bubbleFire: function () {
+    var self = this;
+    this.tone(780, 0.08, 'triangle', 0.08);
+    setTimeout(function () { self.tone(1150, 0.09, 'sine', 0.07); }, 40);
+  },
+
+  bubbleHit: function () {
+    var self = this;
+    this.tone(440, 0.12, 'square', 0.08);
+    setTimeout(function () { self.tone(220, 0.18, 'sawtooth', 0.07); }, 40);
+    setTimeout(function () { self.tone(120, 0.22, 'sine', 0.09); }, 80);
+  },
+
+  bossHit: function () {
+    var self = this;
+    this.tone(160, 0.2, 'sawtooth', 0.12);
+    setTimeout(function () { self.tone(90, 0.28, 'triangle', 0.1); }, 60);
+  },
+
+  bossRoar: function () {
+    var self = this;
+    this.tone(75, 0.45, 'sawtooth', 0.14);
+    setTimeout(function () { self.tone(55, 0.6, 'square', 0.12); }, 80);
+  },
+
+  bossDefeat: function () {
+    var self = this;
+    [392, 523, 659, 784, 1046, 1318].forEach(function (f, i) {
+      setTimeout(function () { self.tone(f, 0.35, 'triangle', 0.12); }, i * 120);
+    });
+    setTimeout(function () {
+      self.tone(1568, 0.7, 'sine', 0.14);
+    }, 780);
   }
 };

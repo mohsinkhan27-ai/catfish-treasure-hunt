@@ -19,8 +19,16 @@ CF.Player = {
   rightFin: null,
   headlight: null,
 
+  // Bubble Blaster Gun Weapon
+  hasBubbleGun: false,
+  shootCooldown: 0,
+  bubbleProjectiles: [],
+  bubbleGunMesh: null,
+  lastCannonSide: false,
+
   // Kid-Friendly Dress-Up Customization
   unlocked: {
+    bubblegun: false,
     pirate: false,
     scuba: false,
     crown: false,
@@ -61,6 +69,18 @@ CF.Player = {
     this.isBreaching = false;
     this.breachFlip = 0;
     this.snorkelTimer = 0;
+    this.hasBubbleGun = false;
+    this.shootCooldown = 0;
+    this.clearBubbles();
+
+    if (this.bubbleGunMesh) {
+      this.bubbleGunMesh.visible = false;
+    }
+
+    var fireBtn = document.getElementById('touchFireBtn');
+    if (fireBtn) {
+      fireBtn.classList.remove('unlocked-glow');
+    }
 
     if (this.mesh) {
       this.mesh.position.set(this.x, this.y, this.z);
@@ -73,6 +93,7 @@ CF.Player = {
     if (!this.mesh) {
       this.buildMesh();
       this.buildAccessories();
+      this.buildBubbleGunMesh();
     }
   },
 
@@ -111,7 +132,16 @@ CF.Player = {
 
   unlock: function (id) {
     this.unlocked[id] = true;
-    if (id === 'rainbow' || id === 'sparkle') {
+    if (id === 'bubblegun') {
+      this.hasBubbleGun = true;
+      if (this.bubbleGunMesh) {
+        this.bubbleGunMesh.visible = true;
+      }
+      var fireBtn = document.getElementById('touchFireBtn');
+      if (fireBtn) {
+        fireBtn.classList.add('unlocked-glow');
+      }
+    } else if (id === 'rainbow' || id === 'sparkle') {
       this.equipTrail(id);
     } else {
       this.equipHat(id);
@@ -505,6 +535,195 @@ CF.Player = {
     starfishGroup.visible = false;
     v.add(starfishGroup);
     this.hatMeshes.starfish = starfishGroup;
+  },
+
+  buildBubbleGunMesh: function () {
+    var gunGroup = new THREE.Group();
+    var cyanMetalMat = new THREE.MeshLambertMaterial({ color: 0x00d4eb, emissive: 0x003b44 });
+    var goldMat = new THREE.MeshLambertMaterial({ color: 0xffd000, emissive: 0x443300 });
+    var glowGlassMat = new THREE.MeshLambertMaterial({ color: 0x80ffff, transparent: true, opacity: 0.65 });
+    var neonCyanBasic = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+
+    // Left Blaster Cannon
+    var leftGun = new THREE.Group();
+    leftGun.position.set(13.5, 0.5, 9);
+
+    var barrelGeom = new THREE.CylinderGeometry(1.5, 1.9, 15, 8);
+    barrelGeom.rotateX(Math.PI / 2);
+    var barrelL = new THREE.Mesh(barrelGeom, cyanMetalMat);
+    leftGun.add(barrelL);
+
+    var nozzleGeom = new THREE.CylinderGeometry(2.2, 1.5, 3.5, 8);
+    nozzleGeom.rotateX(Math.PI / 2);
+    var nozzleL = new THREE.Mesh(nozzleGeom, goldMat);
+    nozzleL.position.set(0, 0, 8.2);
+    leftGun.add(nozzleL);
+
+    var chamberGeom = new THREE.SphereGeometry(2.5, 10, 8);
+    var chamberL = new THREE.Mesh(chamberGeom, glowGlassMat);
+    chamberL.position.set(0, 2.2, -1.5);
+    leftGun.add(chamberL);
+
+    var orbL = new THREE.Mesh(new THREE.SphereGeometry(1.2, 6, 6), neonCyanBasic);
+    orbL.position.set(0, 2.2, -1.5);
+    leftGun.add(orbL);
+
+    gunGroup.add(leftGun);
+
+    // Right Blaster Cannon
+    var rightGun = new THREE.Group();
+    rightGun.position.set(-13.5, 0.5, 9);
+
+    var barrelR = new THREE.Mesh(barrelGeom, cyanMetalMat);
+    rightGun.add(barrelR);
+
+    var nozzleR = new THREE.Mesh(nozzleGeom, goldMat);
+    nozzleR.position.set(0, 0, 8.2);
+    rightGun.add(nozzleR);
+
+    var chamberR = new THREE.Mesh(chamberGeom, glowGlassMat);
+    chamberR.position.set(0, 2.2, -1.5);
+    rightGun.add(chamberR);
+
+    var orbR = new THREE.Mesh(new THREE.SphereGeometry(1.2, 6, 6), neonCyanBasic);
+    orbR.position.set(0, 2.2, -1.5);
+    rightGun.add(orbR);
+
+    gunGroup.add(rightGun);
+
+    gunGroup.visible = false;
+    if (this.visualMesh) {
+      this.visualMesh.add(gunGroup);
+    }
+    this.bubbleGunMesh = gunGroup;
+  },
+
+  fireBubbleGun: function () {
+    if (!this.hasBubbleGun) return;
+    if (this.shootCooldown > 0) return;
+    this.shootCooldown = 0.20;
+
+    if (CF.Audio && CF.Audio.bubbleFire) CF.Audio.bubbleFire();
+
+    var forward = new THREE.Vector3(0, 0, 1).applyEuler(this.mesh.rotation);
+    var right = new THREE.Vector3(1, 0, 0).applyEuler(this.mesh.rotation);
+
+    this.lastCannonSide = !this.lastCannonSide;
+    var sideOffset = this.lastCannonSide ? 13.5 : -13.5;
+
+    var spawnPos = this.mesh.position.clone()
+      .add(forward.clone().multiplyScalar(24))
+      .add(right.clone().multiplyScalar(sideOffset));
+
+    var speed = 26.0;
+    var velocity = forward.clone().multiplyScalar(speed);
+
+    // Glowing iridescent bubble projectile
+    var bubbleGeom = new THREE.SphereGeometry(3.6, 12, 10);
+    var bubbleMat = new THREE.MeshBasicMaterial({
+      color: 0x66ffff,
+      transparent: true,
+      opacity: 0.82
+    });
+    var bubbleMesh = new THREE.Mesh(bubbleGeom, bubbleMat);
+
+    var coreGeom = new THREE.SphereGeometry(1.8, 8, 8);
+    var coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
+    var coreMesh = new THREE.Mesh(coreGeom, coreMat);
+    bubbleMesh.add(coreMesh);
+
+    bubbleMesh.position.copy(spawnPos);
+    if (CF.Render3D && CF.Render3D.scene) {
+      CF.Render3D.scene.add(bubbleMesh);
+    }
+
+    this.bubbleProjectiles.push({
+      mesh: bubbleMesh,
+      x: spawnPos.x,
+      y: spawnPos.y,
+      z: spawnPos.z,
+      vx: velocity.x,
+      vy: velocity.y,
+      vz: velocity.z,
+      life: 2.2
+    });
+
+    if (CF.Render3D && CF.Render3D.burst) {
+      CF.Render3D.burst(spawnPos.x, spawnPos.y, spawnPos.z, false);
+    }
+  },
+
+  clearBubbles: function () {
+    if (!this.bubbleProjectiles) return;
+    for (var i = 0; i < this.bubbleProjectiles.length; i++) {
+      var b = this.bubbleProjectiles[i];
+      if (b.mesh && CF.Render3D && CF.Render3D.scene) {
+        CF.Render3D.scene.remove(b.mesh);
+      }
+    }
+    this.bubbleProjectiles = [];
+  },
+
+  updateBubbles: function (dt) {
+    if (this.shootCooldown > 0) {
+      this.shootCooldown -= dt;
+    }
+
+    if (!this.bubbleProjectiles || this.bubbleProjectiles.length === 0) return;
+    var scene = CF.Render3D ? CF.Render3D.scene : null;
+
+    for (var i = this.bubbleProjectiles.length - 1; i >= 0; i--) {
+      var b = this.bubbleProjectiles[i];
+      b.life -= dt;
+
+      b.x += b.vx;
+      b.y += b.vy;
+      b.z += b.vz;
+      b.vy += 0.04; // slight aquatic buoyancy
+
+      if (b.mesh) {
+        b.mesh.position.set(b.x, b.y, b.z);
+        b.mesh.scale.multiplyScalar(0.998);
+      }
+
+      var hit = false;
+
+      // 1. Check Collision with Giant Octopus Boss!
+      if (CF.Octopus && CF.Octopus.alive) {
+        var dOcto = CF.dist3D(b.x, b.y, b.z, CF.Octopus.x, CF.Octopus.y, CF.Octopus.z);
+        if (dOcto < 75) {
+          hit = true;
+          CF.Octopus.takeDamage(10, b.x, b.y, b.z);
+          if (CF.Audio && CF.Audio.bubbleHit) CF.Audio.bubbleHit();
+          if (CF.Render3D && CF.Render3D.burst) CF.Render3D.burst(b.x, b.y, b.z, false);
+        }
+      }
+
+      // 2. Check Collision with Sharks / Barracuda (defensive stun)
+      if (!hit && CF.Shark && CF.Shark.list) {
+        for (var p = 0; p < CF.Shark.list.length; p++) {
+          var pred = CF.Shark.list[p];
+          var dPred = CF.dist3D(b.x, b.y, b.z, pred.x, pred.y, pred.z);
+          if (dPred < 48) {
+            hit = true;
+            pred.speed = -4.0;
+            if (CF.Audio && CF.Audio.bubbleHit) CF.Audio.bubbleHit();
+            if (CF.Render3D && CF.Render3D.burst) CF.Render3D.burst(b.x, b.y, b.z, false);
+            break;
+          }
+        }
+      }
+
+      // 3. Expiration or hit
+      if (hit || b.life <= 0 || (CF.CONFIG && b.y > CF.CONFIG.WORLD_SURFACE)) {
+        if (b.mesh && scene) {
+          scene.remove(b.mesh);
+          if (b.mesh.geometry) b.mesh.geometry.dispose();
+          if (b.mesh.material) b.mesh.material.dispose();
+        }
+        this.bubbleProjectiles.splice(i, 1);
+      }
+    }
   },
 
   setFirstPerson: function (isFirst) {

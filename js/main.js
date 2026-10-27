@@ -25,6 +25,7 @@ CF.Main = {
     CF.Shark.init();
     CF.Decoy.init();
     if (CF.Thrills) CF.Thrills.init();
+    if (CF.Octopus) CF.Octopus.init();
     CF.Render3D.resetCamera();
 
     if (CF.HUD.els.startBtn) CF.HUD.els.startBtn.addEventListener('click', function () { self.start(); });
@@ -51,6 +52,7 @@ CF.Main = {
     CF.Shark.reset();
     CF.Decoy.reset();
     if (CF.Thrills) CF.Thrills.reset();
+    if (CF.Octopus) CF.Octopus.reset();
     CF.Render3D.resetCamera();
     CF.Map.open = false;
 
@@ -103,10 +105,20 @@ CF.Main = {
 
     var ts = this.timeScale || 1.0;
     var dt = (this.STEP / 1000) * ts;
+
+    // Firing Bubble Blaster Gun (F / B key, Mouse Click, or Touch Fire Button)
+    if (CF.Input.justPressed('fire') || CF.Input.held['fire']) {
+      if (CF.Player && CF.Player.fireBubbleGun) {
+        CF.Player.fireBubbleGun();
+      }
+    }
+
     CF.Player.update(ts);
+    if (CF.Player && CF.Player.updateBubbles) CF.Player.updateBubbles(dt);
     if (CF.Thrills) CF.Thrills.update(dt, this.t);
     CF.Critters.update(this.t);
     CF.Shark.update(this.t, dt);
+    if (CF.Octopus) CF.Octopus.update(dt, this.t);
 
     if (this.state !== 'play') {
       CF.Input.clearFrame();
@@ -130,6 +142,17 @@ CF.Main = {
     }
 
     CF.Input.clearFrame();
+  },
+
+  winBoss: function () {
+    if (this.state !== 'play') return;
+    this.state = 'win';
+    var elapsed = (performance.now() - this.startTime) / 1000;
+    if (CF.HUD && CF.HUD.showBossWin) {
+      CF.HUD.showBossWin(elapsed);
+    } else if (CF.HUD && CF.HUD.showWin) {
+      CF.HUD.showWin(elapsed);
+    }
   },
 
   lose: function () {
