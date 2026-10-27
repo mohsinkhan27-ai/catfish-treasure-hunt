@@ -81,6 +81,10 @@ CF.Player = {
     if (fireBtn) {
       fireBtn.classList.remove('unlocked-glow');
     }
+    var weaponChip = document.getElementById('weaponChip');
+    if (weaponChip) {
+      weaponChip.style.display = 'none';
+    }
 
     if (this.mesh) {
       this.mesh.position.set(this.x, this.y, this.z);
@@ -97,7 +101,37 @@ CF.Player = {
     }
   },
 
+  equipWeapon: function (enable) {
+    if (enable === undefined) {
+      this.hasBubbleGun = !this.hasBubbleGun;
+    } else {
+      this.hasBubbleGun = !!enable;
+    }
+    if (this.bubbleGunMesh) {
+      this.bubbleGunMesh.visible = this.hasBubbleGun;
+    }
+    var fireBtn = document.getElementById('touchFireBtn');
+    if (fireBtn) {
+      if (this.hasBubbleGun) fireBtn.classList.add('unlocked-glow');
+      else fireBtn.classList.remove('unlocked-glow');
+    }
+    var weaponChip = document.getElementById('weaponChip');
+    if (weaponChip) {
+      weaponChip.style.display = this.hasBubbleGun ? 'flex' : 'none';
+    }
+    if (CF.Render3D && CF.Render3D.triggerHeroCam) {
+      CF.Render3D.triggerHeroCam(3.0);
+    }
+    if (CF.HUD && CF.HUD.updateAvatar) {
+      CF.HUD.updateAvatar();
+    }
+  },
+
   equipHat: function (id) {
+    if (id === 'bubblegun') {
+      this.equipWeapon();
+      return;
+    }
     if (this.activeHat === id) {
       this.activeHat = null;
     } else {
@@ -133,14 +167,7 @@ CF.Player = {
   unlock: function (id) {
     this.unlocked[id] = true;
     if (id === 'bubblegun') {
-      this.hasBubbleGun = true;
-      if (this.bubbleGunMesh) {
-        this.bubbleGunMesh.visible = true;
-      }
-      var fireBtn = document.getElementById('touchFireBtn');
-      if (fireBtn) {
-        fireBtn.classList.add('unlocked-glow');
-      }
+      this.equipWeapon(true);
     } else if (id === 'rainbow' || id === 'sparkle') {
       this.equipTrail(id);
     } else {
@@ -539,57 +566,117 @@ CF.Player = {
 
   buildBubbleGunMesh: function () {
     var gunGroup = new THREE.Group();
-    var cyanMetalMat = new THREE.MeshLambertMaterial({ color: 0x00d4eb, emissive: 0x003b44 });
-    var goldMat = new THREE.MeshLambertMaterial({ color: 0xffd000, emissive: 0x443300 });
-    var glowGlassMat = new THREE.MeshLambertMaterial({ color: 0x80ffff, transparent: true, opacity: 0.65 });
-    var neonCyanBasic = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
-    // Left Blaster Cannon
-    var leftGun = new THREE.Group();
-    leftGun.position.set(13.5, 0.5, 9);
+    // High-contrast vibrant aquatic tech materials
+    var cyanMetalMat = new THREE.MeshLambertMaterial({
+      color: 0x00e5ff,
+      emissive: 0x004d66
+    });
+    var navySaddleMat = new THREE.MeshLambertMaterial({
+      color: 0x10283e,
+      emissive: 0x040c14
+    });
+    var goldTrimMat = new THREE.MeshLambertMaterial({
+      color: 0xffd000,
+      emissive: 0x553800
+    });
+    var darkSteelMat = new THREE.MeshLambertMaterial({
+      color: 0x1a2634
+    });
+    var glowGlassMat = new THREE.MeshLambertMaterial({
+      color: 0x80ffff,
+      transparent: true,
+      opacity: 0.72
+    });
+    var neonCyanBasic = new THREE.MeshBasicMaterial({
+      color: 0x00ffff
+    });
 
-    var barrelGeom = new THREE.CylinderGeometry(1.5, 1.9, 15, 8);
-    barrelGeom.rotateX(Math.PI / 2);
-    var barrelL = new THREE.Mesh(barrelGeom, cyanMetalMat);
-    leftGun.add(barrelL);
+    // 1. Central Tech-Harness Saddle Plate on Back
+    // Sits prominently across the catfish shoulders (x: 0, y: 7.8, z: 0.5)
+    var saddleGeom = new THREE.BoxGeometry(26, 4.5, 16);
+    var saddle = new THREE.Mesh(saddleGeom, navySaddleMat);
+    saddle.position.set(0, 7.8, 0.5);
+    gunGroup.add(saddle);
 
-    var nozzleGeom = new THREE.CylinderGeometry(2.2, 1.5, 3.5, 8);
-    nozzleGeom.rotateX(Math.PI / 2);
-    var nozzleL = new THREE.Mesh(nozzleGeom, goldMat);
-    nozzleL.position.set(0, 0, 8.2);
-    leftGun.add(nozzleL);
+    var saddleTrimGeom = new THREE.BoxGeometry(27.5, 1.8, 17.5);
+    var saddleTrim = new THREE.Mesh(saddleTrimGeom, goldTrimMat);
+    saddleTrim.position.set(0, 7.8, 0.5);
+    gunGroup.add(saddleTrim);
 
-    var chamberGeom = new THREE.SphereGeometry(2.5, 10, 8);
-    var chamberL = new THREE.Mesh(chamberGeom, glowGlassMat);
-    chamberL.position.set(0, 2.2, -1.5);
-    leftGun.add(chamberL);
+    // Glowing energy spine
+    var spineGeom = new THREE.CylinderGeometry(1.6, 1.6, 18, 8);
+    spineGeom.rotateX(Math.PI / 2);
+    var spine = new THREE.Mesh(spineGeom, neonCyanBasic);
+    spine.position.set(0, 10.4, 0.5);
+    gunGroup.add(spine);
 
-    var orbL = new THREE.Mesh(new THREE.SphereGeometry(1.2, 6, 6), neonCyanBasic);
-    orbL.position.set(0, 2.2, -1.5);
-    leftGun.add(orbL);
+    // 2. Helper to build Left and Right Heavy Blaster Cannons
+    var createCannon = function (isLeft) {
+      var side = isLeft ? 1 : -1;
+      var cannon = new THREE.Group();
+      // Mounted high and wide outside the body for 100% visibility!
+      cannon.position.set(side * 18.5, 8.5, 2.0);
 
-    gunGroup.add(leftGun);
+      // Angled Pylon Mount connecting saddle to cannon
+      var pylonGeom = new THREE.BoxGeometry(7.0, 3.2, 5.0);
+      var pylon = new THREE.Mesh(pylonGeom, darkSteelMat);
+      pylon.position.set(-side * 3.5, -0.5, 0);
+      pylon.rotation.z = side * 0.25;
+      cannon.add(pylon);
 
-    // Right Blaster Cannon
-    var rightGun = new THREE.Group();
-    rightGun.position.set(-13.5, 0.5, 9);
+      // Main Heavy Blaster Barrel (Length 30! Projects boldly forward past nose)
+      var barrelGeom = new THREE.CylinderGeometry(3.2, 3.6, 30, 12);
+      barrelGeom.rotateX(Math.PI / 2);
+      var barrel = new THREE.Mesh(barrelGeom, cyanMetalMat);
+      cannon.add(barrel);
 
-    var barrelR = new THREE.Mesh(barrelGeom, cyanMetalMat);
-    rightGun.add(barrelR);
+      // Gold Reinforced Muzzle Nozzle at the front tip (z = +16.5)
+      var muzzleGeom = new THREE.CylinderGeometry(4.6, 3.2, 4.8, 12);
+      muzzleGeom.rotateX(Math.PI / 2);
+      var muzzle = new THREE.Mesh(muzzleGeom, goldTrimMat);
+      muzzle.position.set(0, 0, 16.5);
+      cannon.add(muzzle);
 
-    var nozzleR = new THREE.Mesh(nozzleGeom, goldMat);
-    nozzleR.position.set(0, 0, 8.2);
-    rightGun.add(nozzleR);
+      // Muzzle bore ring
+      var boreGeom = new THREE.RingGeometry(1.0, 3.2, 12);
+      var bore = new THREE.Mesh(boreGeom, new THREE.MeshBasicMaterial({ color: 0x002233, side: THREE.DoubleSide }));
+      bore.position.set(0, 0, 18.95);
+      cannon.add(bore);
 
-    var chamberR = new THREE.Mesh(chamberGeom, glowGlassMat);
-    chamberR.position.set(0, 2.2, -1.5);
-    rightGun.add(chamberR);
+      // Rear Breech Housing
+      var breechGeom = new THREE.BoxGeometry(7.5, 7.5, 8.5);
+      var breech = new THREE.Mesh(breechGeom, navySaddleMat);
+      breech.position.set(0, 0, -11.5);
+      cannon.add(breech);
 
-    var orbR = new THREE.Mesh(new THREE.SphereGeometry(1.2, 6, 6), neonCyanBasic);
-    orbR.position.set(0, 2.2, -1.5);
-    rightGun.add(orbR);
+      var breechTrim = new THREE.Mesh(new THREE.BoxGeometry(8.2, 8.2, 2.0), goldTrimMat);
+      breechTrim.position.set(0, 0, -11.5);
+      cannon.add(breechTrim);
 
-    gunGroup.add(rightGun);
+      // Giant Bubble Energy Chamber on top
+      var chamberGeom = new THREE.SphereGeometry(5.2, 16, 12);
+      var chamber = new THREE.Mesh(chamberGeom, glowGlassMat);
+      chamber.position.set(0, 5.5, -2.5);
+      cannon.add(chamber);
+
+      var core = new THREE.Mesh(new THREE.SphereGeometry(2.8, 10, 10), neonCyanBasic);
+      core.position.set(0, 5.5, -2.5);
+      cannon.add(core);
+
+      // Dedicated PointLight on each cannon
+      var gunLight = new THREE.PointLight(0x00ffff, 2.4, 60);
+      gunLight.position.set(0, 5.5, -2.5);
+      cannon.add(gunLight);
+
+      return cannon;
+    };
+
+    var leftCannon = createCannon(true);
+    gunGroup.add(leftCannon);
+
+    var rightCannon = createCannon(false);
+    gunGroup.add(rightCannon);
 
     gunGroup.visible = false;
     if (this.visualMesh) {
@@ -607,15 +694,18 @@ CF.Player = {
 
     var forward = new THREE.Vector3(0, 0, 1).applyEuler(this.mesh.rotation);
     var right = new THREE.Vector3(1, 0, 0).applyEuler(this.mesh.rotation);
+    var up = new THREE.Vector3(0, 1, 0).applyEuler(this.mesh.rotation);
 
     this.lastCannonSide = !this.lastCannonSide;
-    var sideOffset = this.lastCannonSide ? 13.5 : -13.5;
+    var sideOffset = this.lastCannonSide ? 18.5 : -18.5;
 
+    // Spawns accurately at the forward nozzle tip
     var spawnPos = this.mesh.position.clone()
-      .add(forward.clone().multiplyScalar(24))
-      .add(right.clone().multiplyScalar(sideOffset));
+      .add(forward.clone().multiplyScalar(28))
+      .add(right.clone().multiplyScalar(sideOffset))
+      .add(up.clone().multiplyScalar(8.5));
 
-    var speed = 26.0;
+    var speed = 28.0;
     var velocity = forward.clone().multiplyScalar(speed);
 
     // Glowing iridescent bubble projectile

@@ -745,6 +745,22 @@ button:active {
 /* ========================================================
    Giant Abyssal Octopus Boss Bar & Weapons
    ======================================================== */
+.weapon-chip {
+  background: rgba(0, 48, 72, 0.92) !important;
+  border: 1.5px solid #00f0ff !important;
+  color: #7ef9ff !important;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.6) !important;
+  animation: pulse-weapon 1.6s infinite alternate;
+  user-select: none;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+@keyframes pulse-weapon {
+  from { border-color: rgba(0, 240, 255, 0.6); box-shadow: 0 0 8px rgba(0, 240, 255, 0.4); }
+  to { border-color: rgba(255, 255, 255, 0.95); box-shadow: 0 0 18px rgba(0, 240, 255, 0.9), 0 0 8px rgba(255, 255, 255, 0.8); }
+}
+
 .boss-bar-container {
   position: absolute;
   top: 56px;

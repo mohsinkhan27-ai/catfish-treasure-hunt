@@ -29,6 +29,15 @@ CF.HUD = {
     this.els.bossWin = document.getElementById('bossWinScreen');
     this.els.bossWinText = document.getElementById('bossWinText');
     this.els.bossAgainBtn = document.getElementById('bossAgainBtn');
+    this.els.weaponChip = document.getElementById('weaponChip');
+
+    if (this.els.weaponChip) {
+      this.els.weaponChip.addEventListener('click', function () {
+        if (CF.Player && CF.Player.fireBubbleGun) {
+          CF.Player.fireBubbleGun();
+        }
+      });
+    }
 
     if (this.els.bossAgainBtn) {
       this.els.bossAgainBtn.addEventListener('click', function () {
@@ -121,7 +130,13 @@ CF.HUD = {
     }
 
     if (hatEl) hatEl.textContent = hatEmoji;
-    if (roleEl) roleEl.textContent = roleTitle;
+    if (roleEl) {
+      if (p.hasBubbleGun) {
+        roleEl.textContent = '🫧 Armed · ' + roleTitle;
+      } else {
+        roleEl.textContent = roleTitle;
+      }
+    }
     if (labelEl) labelEl.textContent = hatTitle;
   },
 
@@ -172,7 +187,12 @@ CF.HUD = {
     for (var i = 0; i < CF.Treasure.ACCESSORIES.length; i++) {
       var item = CF.Treasure.ACCESSORIES[i];
       var isUnlocked = p && p.unlocked && p.unlocked[item.id];
-      var isEquipped = p && (p.activeHat === item.id || p.activeTrail === item.id);
+      var isEquipped = false;
+      if (item.id === 'bubblegun') {
+        isEquipped = p && p.hasBubbleGun;
+      } else {
+        isEquipped = p && (p.activeHat === item.id || p.activeTrail === item.id);
+      }
 
       var cardClass = 'wardrobe-card';
       if (!isUnlocked) cardClass += ' locked';
@@ -191,7 +211,7 @@ CF.HUD = {
       } else if (isEquipped) {
         html += '<button class="wardrobe-btn unequip-btn">Equipped ✓</button>';
       } else {
-        html += '<button class="wardrobe-btn equip-btn">Wear</button>';
+        html += '<button class="wardrobe-btn equip-btn">' + (item.id === 'bubblegun' ? 'Arm' : 'Wear') + '</button>';
       }
       html += '</div>';
       html += '</div>';
@@ -206,7 +226,9 @@ CF.HUD = {
         var id = card.getAttribute('data-id');
         if (!p || !p.unlocked || !p.unlocked[id]) return;
 
-        if (id === 'rainbow' || id === 'sparkle') {
+        if (id === 'bubblegun') {
+          p.equipWeapon();
+        } else if (id === 'rainbow' || id === 'sparkle') {
           p.equipTrail(id);
         } else {
           p.equipHat(id);
