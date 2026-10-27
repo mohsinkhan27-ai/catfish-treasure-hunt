@@ -35,7 +35,7 @@ CF.CONFIG = {
   SHARK_DRAIN_RADIUS: 46,
   SHARK_DRAIN_MAX: 18,
   HEALTH_MAX: 100,
-  HEALTH_REGEN: 14,
+  HEALTH_REGEN: 0, // No auto-regen! Player must preserve lifeline across entire game
 
   // Decoy traps
   DECOY_MAX: 2,

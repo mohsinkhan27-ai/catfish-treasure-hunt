@@ -861,3 +861,101 @@ button:active {
   to { transform: scale(1.06); box-shadow: 0 0 22px rgba(0, 240, 255, 0.95), 0 0 12px rgba(255, 80, 200, 0.7); }
 }
 
+/* ========================================================
+   Holographic Crosshair / Reticle for Bubble Blaster Aiming
+   ======================================================== */
+.reticle {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  pointer-events: none;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reticle-circle {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(0, 240, 255, 0.75);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.55), inset 0 0 6px rgba(0, 240, 255, 0.3);
+  animation: reticleSpin 12s linear infinite;
+}
+
+@keyframes reticleSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.reticle-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #00f0ff, 0 0 14px #00f0ff;
+}
+
+.reticle-line {
+  position: absolute;
+  background: rgba(0, 240, 255, 0.8);
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.6);
+}
+
+.reticle-top {
+  top: 0;
+  width: 2px;
+  height: 7px;
+}
+
+.reticle-bottom {
+  bottom: 0;
+  width: 2px;
+  height: 7px;
+}
+
+.reticle-left {
+  left: 0;
+  height: 2px;
+  width: 7px;
+}
+
+.reticle-right {
+  right: 0;
+  height: 2px;
+  width: 7px;
+}
+
+/* Boss HUD Chip & Objective Alerts */
+.hud-chip.octo-chip {
+  background: rgba(45, 12, 35, 0.85);
+  border-color: rgba(255, 75, 130, 0.5);
+}
+
+.objective-toast {
+  position: absolute;
+  top: 75px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(16, 24, 46, 0.95), rgba(8, 52, 60, 0.95));
+  border: 2px solid #38bdf8;
+  border-radius: 14px;
+  padding: 12px 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.4);
+  color: #f0f9ff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  z-index: 85;
+  text-align: center;
+  max-width: 90vw;
+  animation: unlockBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+

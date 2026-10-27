@@ -27,6 +27,7 @@
     <div id="hud">
       <div class="hud-left">
         <div class="hud-chip">Treasures <b id="treasureCount">0 / 6</b></div>
+        <div class="hud-chip" id="octoChip">Boss <b id="octoObjective">🐙 Lurking</b></div>
         <div class="hud-chip life-chip">
           <span class="chip-label">Life</span>
           <div class="life-bar"><div id="lifeFill"></div></div>
@@ -155,17 +156,39 @@
 
     <div id="hint">WASD / Touch Joystick to swim &middot; Space/Shift (Up/Dive) &middot; F / Tap 🫧 (Bubble Gun) &middot; C for Closet &middot; V for Camera &middot; M for Map</div>
 
+    <!-- Holographic Aquatic Crosshair for Bubble Blaster Aiming -->
+    <div id="reticle" class="reticle" style="display: none;">
+      <div class="reticle-circle"></div>
+      <div class="reticle-dot"></div>
+      <div class="reticle-line reticle-top"></div>
+      <div class="reticle-line reticle-bottom"></div>
+      <div class="reticle-line reticle-left"></div>
+      <div class="reticle-line reticle-right"></div>
+    </div>
+
     <div id="startScreen" class="screen">
       <h1>Catfish Treasure Hunt</h1>
-      <p class="lede">A cat-faced fish roams the vast 3D open ocean. Follow the treasure map and its signal to dig up 6 hidden chests &mdash; while dodging apex predators and the <b>Giant Sea Floor Octopus</b>!</p>
+      <p class="lede">A cat-faced fish roams the vast 3D open ocean. Complete <b>both tasks</b> to win: recover all 6 hidden chests AND vanquish the <b>Giant Sea Floor Octopus</b>!</p>
       <ul>
-        <li><b>🫧 Dual Bubble Blaster Gun</b> &mdash; Found in a treasure chest! Fire rapid bubble torpedoes with <b>F / Tap 🫧</b> to destroy the Giant Octopus on the seafloor and win!</li>
-        <li><b>🐙 Giant Sea Floor Octopus</b> &mdash; An abyssal titan lurking on the ocean floor. It only attacks on the seabed &mdash; swim up into open water to stay safe!</li>
-        <li><b>Dress-Up Fun</b> &mdash; Each chest unlocks a silly accessory: 🏴‍☠️ Pirate Hat, 🤿 Scuba Mask, 👑 Crown, ⭐️ Glowing Starfish, and 🌈 Rainbow Bubbles / ✨ Sparkle Trails!</li>
-        <li><b>Bubble Boost Speed Rings & Breaching</b> &mdash; Swim through rings for turbo boosts, or rocket to the surface to vault into the sunny sky!</li>
+        <li><b>🏆 Two Goals to Win</b> &mdash; 1) Collect all 6 ancient chests. 2) Vanquish the Giant Octopus with your Bubble Blaster!</li>
+        <li><b>🫧 Targeted Bubble Blaster</b> &mdash; Found in a chest! Shoots straight laser-precise bubble torpedoes with <b>F / Tap 🫧</b>. Use the on-screen crosshair to snipe!</li>
+        <li><b>🐙 Enraged Jump-Scare Charge</b> &mdash; The octopus only attacks on the seafloor. Striking it with bubbles provokes a high-speed charging jump scare! Swim up to stay safe!</li>
+        <li><b>❤️ Strict Lifeline Survival</b> &mdash; Lifeline does NOT replenish! Every predator attack takes 10% max. Complete the game with your remaining life!</li>
         <li><b>WASD / Joystick</b> &mdash; Swim in 360&deg; &middot; <b>Space / Shift (Up / Dive)</b> &middot; <b>F / Tap 🫧 (Fire)</b> &middot; <b>C (Closet)</b> &middot; <b>M (Map)</b></li>
       </ul>
       <button id="startBtn" onclick="if(window.CF&&CF.Main)CF.Main.start();" autofocus>Dive In</button>
+    </div>
+
+    <!-- Grand Victory Screen: Both Tasks Completed! -->
+    <div id="grandWinScreen" class="screen hidden" style="display: none;">
+      <div style="font-size: 2.5rem; margin-bottom: 8px;">👑 🏆 🫧 🐙 🏆 👑</div>
+      <h1 style="color: #6ee7b7; text-shadow: 0 0 24px rgba(110, 231, 183, 0.8);">OCEAN CHAMPION!</h1>
+      <p id="grandWinText" class="lede" style="max-width: 540px; margin: 0 auto 16px auto; line-height: 1.5;"></p>
+      <div class="grand-win-checklist" style="display: flex; flex-direction: column; gap: 8px; max-width: 390px; margin: 0 auto 18px auto; text-align: left; background: rgba(0,20,35,0.7); padding: 12px 18px; border-radius: 10px; border: 1px solid rgba(110,231,183,0.3);">
+        <div style="font-size: 0.95rem; font-weight: 700; color: #e0f2fe;">📦 All 6 Ancient Treasures Recovered <b style="color: #6ee7b7; float: right;">✓ Complete</b></div>
+        <div style="font-size: 0.95rem; font-weight: 700; color: #e0f2fe;">🐙 Abyssal Kraken Octopus Defeated <b style="color: #6ee7b7; float: right;">✓ Complete</b></div>
+      </div>
+      <button id="grandAgainBtn" style="background: linear-gradient(180deg, #10b981, #059669); font-size: 1.15rem; padding: 14px 36px; margin-top: 10px;">Play Again</button>
     </div>
 
     <!-- Giant Octopus Boss Defeated Victory Screen -->

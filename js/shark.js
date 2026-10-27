@@ -545,22 +545,13 @@ CF.Shark = {
       }
     }
 
-    // Health drain / regen based on all predators
+    // Predator attack: depletes lifeline by 10% max per bite with invulnerability buffer
     if (anyDraining) {
-      var rate = C.SHARK_DRAIN_MAX * (1 - closestDist / C.SHARK_DRAIN_RADIUS);
-      p.health = Math.max(0, p.health - rate * dt);
-
-      if (Math.random() < 0.25) {
-        CF.Render3D.burst(p.x, p.y, p.z, true);
+      if (p.takeDamage) {
+        p.takeDamage(10);
       }
-
-      if (p.health <= 0) {
-        CF.Main.lose();
-        return;
-      }
-    } else {
-      p.health = Math.min(C.HEALTH_MAX, p.health + C.HEALTH_REGEN * dt);
     }
+    // Lifeline is NOT replenished automatically - user must complete game with remaining lifeline!
 
     // Update global state aliases for HUD & Audio
     this.threat = maxThreat;

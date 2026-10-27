@@ -25,6 +25,7 @@ CF.Player = {
   bubbleProjectiles: [],
   bubbleGunMesh: null,
   lastCannonSide: false,
+  invulnerableTimer: 0,
 
   // Kid-Friendly Dress-Up Customization
   unlocked: {
@@ -71,6 +72,7 @@ CF.Player = {
     this.snorkelTimer = 0;
     this.hasBubbleGun = false;
     this.shootCooldown = 0;
+    this.invulnerableTimer = 0;
     this.clearBubbles();
 
     if (this.bubbleGunMesh) {
@@ -84,6 +86,10 @@ CF.Player = {
     var weaponChip = document.getElementById('weaponChip');
     if (weaponChip) {
       weaponChip.style.display = 'none';
+    }
+    var reticle = document.getElementById('reticle');
+    if (reticle) {
+      reticle.style.display = 'none';
     }
 
     if (this.mesh) {
@@ -99,6 +105,28 @@ CF.Player = {
       this.buildAccessories();
       this.buildBubbleGunMesh();
     }
+  },
+
+  takeDamage: function (amount) {
+    if (this.invulnerableTimer > 0 || this.health <= 0) return false;
+    // Every predator attack depletes by 10% max (10 HP max)!
+    var dmg = Math.min(10, amount || 10);
+    this.health = Math.max(0, this.health - dmg);
+    this.invulnerableTimer = 1.8; // 1.8s invulnerability buffer
+
+    if (CF.Audio && CF.Audio.bump) CF.Audio.bump();
+    if (CF.Render3D && CF.Render3D.burst) {
+      CF.Render3D.burst(this.x, this.y, this.z, true);
+    }
+
+    if (CF.HUD && CF.HUD.update) {
+      CF.HUD.update();
+    }
+
+    if (this.health <= 0) {
+      if (CF.Main) CF.Main.lose();
+    }
+    return true;
   },
 
   equipWeapon: function (enable) {
@@ -118,6 +146,10 @@ CF.Player = {
     var weaponChip = document.getElementById('weaponChip');
     if (weaponChip) {
       weaponChip.style.display = this.hasBubbleGun ? 'flex' : 'none';
+    }
+    var reticle = document.getElementById('reticle');
+    if (reticle) {
+      reticle.style.display = this.hasBubbleGun ? 'block' : 'none';
     }
     if (CF.Render3D && CF.Render3D.triggerHeroCam) {
       CF.Render3D.triggerHeroCam(3.0);
@@ -688,7 +720,7 @@ CF.Player = {
   fireBubbleGun: function () {
     if (!this.hasBubbleGun) return;
     if (this.shootCooldown > 0) return;
-    this.shootCooldown = 0.20;
+    this.shootCooldown = 0.18;
 
     if (CF.Audio && CF.Audio.bubbleFire) CF.Audio.bubbleFire();
 
@@ -705,19 +737,27 @@ CF.Player = {
       .add(right.clone().multiplyScalar(sideOffset))
       .add(up.clone().multiplyScalar(8.5));
 
-    var speed = 28.0;
-    var velocity = forward.clone().multiplyScalar(speed);
+    // TARGETED LASER-STRAIGHT TRAJECTORY:
+    // Both cannons converge toward the exact crosshair target point in front of the catfish!
+    var aimDist = 280.0;
+    var targetPoint = this.mesh.position.clone()
+      .add(forward.clone().multiplyScalar(aimDist))
+      .add(up.clone().multiplyScalar(2.0));
+
+    var bulletDir = targetPoint.clone().sub(spawnPos).normalize();
+    var speed = 38.0; // Fast straight-line velocity
+    var velocity = bulletDir.multiplyScalar(speed);
 
     // Glowing iridescent bubble projectile
     var bubbleGeom = new THREE.SphereGeometry(3.6, 12, 10);
     var bubbleMat = new THREE.MeshBasicMaterial({
       color: 0x66ffff,
       transparent: true,
-      opacity: 0.82
+      opacity: 0.88
     });
     var bubbleMesh = new THREE.Mesh(bubbleGeom, bubbleMat);
 
-    var coreGeom = new THREE.SphereGeometry(1.8, 8, 8);
+    var coreGeom = new THREE.SphereGeometry(2.0, 8, 8);
     var coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
     var coreMesh = new THREE.Mesh(coreGeom, coreMat);
     bubbleMesh.add(coreMesh);
@@ -735,7 +775,7 @@ CF.Player = {
       vx: velocity.x,
       vy: velocity.y,
       vz: velocity.z,
-      life: 2.2
+      life: 2.4
     });
 
     if (CF.Render3D && CF.Render3D.burst) {
@@ -766,14 +806,13 @@ CF.Player = {
       var b = this.bubbleProjectiles[i];
       b.life -= dt;
 
+      // Pure straight line progression without any buoyancy curve!
       b.x += b.vx;
       b.y += b.vy;
       b.z += b.vz;
-      b.vy += 0.04; // slight aquatic buoyancy
 
       if (b.mesh) {
         b.mesh.position.set(b.x, b.y, b.z);
-        b.mesh.scale.multiplyScalar(0.998);
       }
 
       var hit = false;
@@ -781,7 +820,7 @@ CF.Player = {
       // 1. Check Collision with Giant Octopus Boss!
       if (CF.Octopus && CF.Octopus.alive) {
         var dOcto = CF.dist3D(b.x, b.y, b.z, CF.Octopus.x, CF.Octopus.y, CF.Octopus.z);
-        if (dOcto < 75) {
+        if (dOcto < 90) {
           hit = true;
           CF.Octopus.takeDamage(10, b.x, b.y, b.z);
           if (CF.Audio && CF.Audio.bubbleHit) CF.Audio.bubbleHit();
@@ -794,7 +833,7 @@ CF.Player = {
         for (var p = 0; p < CF.Shark.list.length; p++) {
           var pred = CF.Shark.list[p];
           var dPred = CF.dist3D(b.x, b.y, b.z, pred.x, pred.y, pred.z);
-          if (dPred < 48) {
+          if (dPred < 50) {
             hit = true;
             pred.speed = -4.0;
             if (CF.Audio && CF.Audio.bubbleHit) CF.Audio.bubbleHit();
@@ -827,6 +866,18 @@ CF.Player = {
     var a = CF.Input.axis();
     var dt = 1 / 60;
     var ts = (typeof timeScale === 'number') ? timeScale : 1.0;
+
+    // Invulnerability decay & hit blinking
+    if (this.invulnerableTimer > 0) {
+      this.invulnerableTimer -= dt * ts;
+      if (this.visualMesh) {
+        this.visualMesh.visible = (Math.floor(this.invulnerableTimer * 14) % 2 === 0);
+      }
+    } else {
+      if (this.visualMesh && this.visualMesh.visible === false && (!CF.Render3D || CF.Render3D.cameraMode !== 'first')) {
+        this.visualMesh.visible = true;
+      }
+    }
 
     // Turbo Boost decay
     if (this.boostTimer > 0) {

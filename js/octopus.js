@@ -2,8 +2,8 @@ window.CF = window.CF || {};
 
 CF.Octopus = {
   alive: true,
-  hp: 100,
-  maxHp: 100,
+  hp: 280,
+  maxHp: 280,
   x: 480,
   y: -520,
   z: -580,
@@ -14,6 +14,7 @@ CF.Octopus = {
   attackCooldown: 0,
   damageCooldown: 0,
   flinchTimer: 0,
+  chargeTimer: 0, // Enraged Jump-Scare Charge timer when attacked with bubbles
   mesh: null,
   mantleMesh: null,
   eyeLights: [],
@@ -30,7 +31,8 @@ CF.Octopus = {
 
   reset: function () {
     this.alive = true;
-    this.hp = this.maxHp;
+    this.maxHp = 280;
+    this.hp = 280;
     this.x = 480;
     this.z = -580;
     this.y = CF.Render3D.getTerrainHeight(this.x, this.z) + 24;
@@ -40,6 +42,7 @@ CF.Octopus = {
     this.attackCooldown = 0;
     this.damageCooldown = 0;
     this.flinchTimer = 0;
+    this.chargeTimer = 0;
     this.clearInkClouds();
 
     if (this.mesh) {
@@ -241,80 +244,97 @@ CF.Octopus = {
     if (this.attackCooldown > 0) this.attackCooldown -= dt;
     if (this.damageCooldown > 0) this.damageCooldown -= dt;
     if (this.flinchTimer > 0) this.flinchTimer -= dt;
+    if (this.chargeTimer > 0) this.chargeTimer -= dt;
 
     // Flinch Flash when damaged
     if (this.mantleMat) {
       if (this.flinchTimer > 0) {
         this.mantleMat.color.setHex(0xffffff);
         this.mantleMat.emissive.setHex(0xff2244);
+      } else if (this.chargeTimer > 0) {
+        this.mantleMat.color.setHex(0xd4113b);
+        this.mantleMat.emissive.setHex(0x550a1a);
       } else {
         this.mantleMat.color.setHex(0x931b5c);
         this.mantleMat.emissive.setHex(0x240618);
       }
     }
 
-    if (isPlayerOnSeaFloor && distH < 380) {
+    var targetYaw = Math.atan2(dx, dz);
+
+    if (this.chargeTimer > 0) {
       // ============================================
-      // 1. ACTIVE ATTACK MODE ON SEA FLOOR!
+      // 1. ENRAGED JUMP-SCARE CHARGE!
+      // (Triggered ONLY when attacked with bubbles!)
       // ============================================
-      this.state = 'chase_floor';
+      this.state = 'charge_jump_scare';
       if (bossBadge) {
-        bossBadge.textContent = '⚠️ ATTACKING ON SEA FLOOR!';
+        bossBadge.textContent = '⚡ ENRAGED JUMP SCARE CHARGE!';
         bossBadge.className = 'boss-state-badge badge-danger';
       }
 
       if (this.eyeLight) {
-        this.eyeLight.color.setHex(0xff2222);
-        this.eyeLight.intensity = 3.0;
+        this.eyeLight.color.setHex(0xff0000);
+        this.eyeLight.intensity = 4.2;
       }
 
-      // Turn towards player along the sea floor
-      var targetYaw = Math.atan2(dx, dz);
-      this.yaw = CF.lerpAngle(this.yaw, targetYaw, 0.045);
+      // Fast, aggressive snap turn directly toward catfish
+      this.yaw = CF.lerpAngle(this.yaw, targetYaw, 0.085);
 
-      // Crawl along the sea floor toward the catfish
-      if (distH > 95) {
-        this.speed = CF.lerp(this.speed, 4.4, 0.05);
-      } else {
-        this.speed = CF.lerp(this.speed, 1.2, 0.08);
-      }
+      // Sprints at terrifying speed (11.5, faster than catfish max speed!)
+      this.speed = CF.lerp(this.speed, 11.5, 0.08);
 
       this.x += Math.sin(this.yaw) * this.speed;
       this.z += Math.cos(this.yaw) * this.speed;
 
-      // Tentacle Whip & Ink Cloud Attack!
-      if (distH < 140 && this.attackCooldown <= 0) {
-        this.attackCooldown = 2.8;
-        this.spawnInkCloud(this.x + Math.sin(this.yaw) * 35, this.y, this.z + Math.cos(this.yaw) * 35);
-        if (CF.Audio && CF.Audio.bossRoar) CF.Audio.bossRoar();
-
-        // Screen shake if close
-        if (distH < 110) {
-          CF.Render3D.burst(this.x, this.y + 12, this.z, true);
+      // Seafloor whip slam during charge
+      if (distH < 85 && isPlayerOnSeaFloor && this.damageCooldown <= 0) {
+        this.damageCooldown = 1.6;
+        if (p.takeDamage) {
+          p.takeDamage(10); // Depletes lifeline by 10% max!
         }
+        if (CF.Audio && CF.Audio.bossRoar) CF.Audio.bossRoar();
+        CF.Render3D.burst(this.x, this.y + 12, this.z, true);
       }
 
-      // Life drain on sea floor contact
-      if (distH < 75 && this.damageCooldown <= 0) {
-        this.damageCooldown = 0.8;
-        p.health = Math.max(0, p.health - 22);
-        CF.Render3D.burst(p.x, p.y, p.z, true);
-        if (CF.Audio && CF.Audio.bump) CF.Audio.bump();
+    } else if (isPlayerOnSeaFloor && distH < 320) {
+      // ============================================
+      // 2. NORMAL SEA FLOOR LURK / SLOW PATROL
+      // (Slow movement, NO high speed charge!)
+      // ============================================
+      this.state = 'lurk_floor';
+      if (bossBadge) {
+        bossBadge.textContent = '🐙 LURKING ON SEA FLOOR';
+        bossBadge.className = 'boss-state-badge';
+      }
 
-        if (p.health <= 0) {
-          CF.Main.lose();
-          return;
+      if (this.eyeLight) {
+        this.eyeLight.color.setHex(0xffaa00);
+        this.eyeLight.intensity = 2.0;
+      }
+
+      this.yaw = CF.lerpAngle(this.yaw, targetYaw, 0.025);
+
+      // Slow, lazy creeping (only 1.8 units/frame)
+      this.speed = CF.lerp(this.speed, (distH > 100 ? 1.8 : 0.6), 0.04);
+      this.x += Math.sin(this.yaw) * this.speed;
+      this.z += Math.cos(this.yaw) * this.speed;
+
+      // Swats with tentacle if player comes right into its mouth/tentacles
+      if (distH < 75 && this.damageCooldown <= 0) {
+        this.damageCooldown = 1.8;
+        if (p.takeDamage) {
+          p.takeDamage(10); // Depletes 10% max!
         }
       }
 
     } else {
       // ============================================
-      // 2. LURKING / SAFE MODE
-      // (Player is safe up in the water column or far away)
+      // 3. IDLE / UPPER WATER SAFE
       // ============================================
       this.state = 'lurking';
       if (bossBadge) {
-        if (!isPlayerOnSeaFloor && distH < 450) {
+        if (!isPlayerOnSeaFloor && distH < 500) {
           bossBadge.textContent = '🌊 SAFE (IN UPPER WATER)';
           bossBadge.className = 'boss-state-badge badge-safe';
         } else {
@@ -325,15 +345,14 @@ CF.Octopus = {
 
       if (this.eyeLight) {
         this.eyeLight.color.setHex(0xffdd00);
-        this.eyeLight.intensity = 1.8;
+        this.eyeLight.intensity = 1.6;
       }
 
-      this.speed = CF.lerp(this.speed, 0, 0.06);
+      this.speed = CF.lerp(this.speed, 0, 0.05);
 
-      // Calm breathing gaze tracks player
+      // Calmly watches player
       if (distH < 450) {
-        var watchYaw = Math.atan2(dx, dz);
-        this.yaw = CF.lerpAngle(this.yaw, watchYaw, 0.018);
+        this.yaw = CF.lerpAngle(this.yaw, targetYaw, 0.015);
       }
     }
 
@@ -452,17 +471,15 @@ CF.Octopus = {
     if (!this.alive) return;
 
     this.hp = Math.max(0, this.hp - amount);
-    this.flinchTimer = 0.38;
-
-    // Recoil backward from impact
-    var knockBack = 12.0;
-    this.x -= Math.sin(this.yaw) * knockBack;
-    this.z -= Math.cos(this.yaw) * knockBack;
+    this.flinchTimer = 0.35;
+    // TRIGGER ENRAGED JUMP-SCARE CHARGE (speed rush towards catfish!)
+    this.chargeTimer = 3.2;
 
     // Ink puff on hit
     this.spawnInkCloud(hitX, hitY, hitZ);
 
     if (CF.Audio && CF.Audio.bossHit) CF.Audio.bossHit();
+    if (CF.Audio && CF.Audio.bossRoar) CF.Audio.bossRoar();
 
     // Check Defeat!
     if (this.hp <= 0) {
@@ -511,11 +528,11 @@ CF.Octopus = {
       bossBar.style.display = 'none';
     }
 
-    // Trigger Win Celebration after defeat sequence!
+    // Check if both tasks are complete or announce remaining chests needed!
     setTimeout(function () {
-      if (CF.Main && CF.Main.winBoss) {
-        CF.Main.winBoss();
+      if (CF.Main && CF.Main.checkGameWin) {
+        CF.Main.checkGameWin();
       }
-    }, 2200);
+    }, 1800);
   }
 };

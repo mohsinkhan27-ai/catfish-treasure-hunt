@@ -29,7 +29,17 @@ CF.HUD = {
     this.els.bossWin = document.getElementById('bossWinScreen');
     this.els.bossWinText = document.getElementById('bossWinText');
     this.els.bossAgainBtn = document.getElementById('bossAgainBtn');
+    this.els.grandWin = document.getElementById('grandWinScreen');
+    this.els.grandWinText = document.getElementById('grandWinText');
+    this.els.grandAgainBtn = document.getElementById('grandAgainBtn');
     this.els.weaponChip = document.getElementById('weaponChip');
+    this.els.octoObjective = document.getElementById('octoObjective');
+
+    if (this.els.grandAgainBtn) {
+      this.els.grandAgainBtn.addEventListener('click', function () {
+        if (CF.Main) CF.Main.start();
+      });
+    }
 
     if (this.els.weaponChip) {
       this.els.weaponChip.addEventListener('click', function () {
@@ -268,7 +278,22 @@ CF.HUD = {
 
   update: function () {
     var C = CF.CONFIG;
-    if (this.els.count) this.els.count.textContent = CF.Treasure.foundCount + ' / ' + C.TREASURE_COUNT;
+    if (this.els.count) {
+      var isAllChests = (CF.Treasure.foundCount >= C.TREASURE_COUNT);
+      this.els.count.textContent = CF.Treasure.foundCount + ' / ' + C.TREASURE_COUNT + (isAllChests ? ' ✓' : '');
+      if (isAllChests) this.els.count.style.color = '#51cf66';
+      else this.els.count.style.color = '';
+    }
+
+    if (this.els.octoObjective) {
+      if (CF.Octopus && !CF.Octopus.alive) {
+        this.els.octoObjective.textContent = '🐙 Defeated ✓';
+        this.els.octoObjective.style.color = '#51cf66';
+      } else {
+        this.els.octoObjective.textContent = '🐙 Lurking';
+        this.els.octoObjective.style.color = '#ff99bb';
+      }
+    }
 
     var s = CF.Treasure.signal;
     if (this.els.signal) {
@@ -291,27 +316,57 @@ CF.HUD = {
       this.els.bossWin.classList.add('hidden');
       this.els.bossWin.style.display = 'none';
     }
+    if (this.els.grandWin) {
+      this.els.grandWin.classList.add('hidden');
+      this.els.grandWin.style.display = 'none';
+    }
     this.closeWardrobe();
   },
 
+  showObjectiveToast: function (msg) {
+    var self = this;
+    if (!this.els.unlockToast) return;
+    var iconEl = document.getElementById('unlockIcon');
+    var titleEl = document.getElementById('unlockTitle');
+    var descEl = document.getElementById('unlockDesc');
+    if (iconEl) iconEl.textContent = '🎯';
+    if (titleEl) titleEl.textContent = 'MISSION OBJECTIVE';
+    if (descEl) descEl.textContent = msg;
+
+    this.els.unlockToast.classList.remove('hidden');
+    this.els.unlockToast.style.display = 'flex';
+    this.els.unlockToast.classList.add('pop-in');
+
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(function () {
+      if (self.els.unlockToast) {
+        self.els.unlockToast.classList.add('hidden');
+        self.els.unlockToast.classList.remove('pop-in');
+        self.els.unlockToast.style.display = 'none';
+      }
+    }, 5500);
+  },
+
+  showGrandWin: function (seconds) {
+    if (this.els.grandWinText) {
+      this.els.grandWinText.textContent = 'You successfully recovered all ' + CF.CONFIG.TREASURE_COUNT + ' ancient treasures AND destroyed the Giant Abyssal Octopus with your Bubble Blaster in ' + seconds.toFixed(1) + 's!';
+    }
+    if (this.els.grandWin) {
+      this.els.grandWin.classList.remove('hidden');
+      this.els.grandWin.style.display = 'flex';
+    }
+  },
+
   showWin: function (seconds) {
-    var C = CF.CONFIG;
-    this.els.winText.textContent = 'You found all ' + C.TREASURE_COUNT + ' treasures in ' + seconds.toFixed(1) + 's!';
-    this.els.win.classList.remove('hidden');
+    this.showGrandWin(seconds);
   },
 
   showBossWin: function (seconds) {
-    if (this.els.bossWinText) {
-      this.els.bossWinText.textContent = 'You found the Bubble Blaster in the treasure chest and destroyed the Giant Abyssal Octopus in ' + seconds.toFixed(1) + 's! You saved the coral reef and won the game!';
-    }
-    if (this.els.bossWin) {
-      this.els.bossWin.classList.remove('hidden');
-      this.els.bossWin.style.display = 'flex';
-    }
+    this.showGrandWin(seconds);
   },
 
   showLose: function (found, total) {
-    this.els.loseText.textContent = 'The predator drained all your life. You recovered ' + found + ' of ' + total + ' treasures.';
+    this.els.loseText.textContent = 'Your lifeline was fully depleted! You recovered ' + found + ' of ' + total + ' treasures.';
     this.els.lose.classList.remove('hidden');
   }
 };

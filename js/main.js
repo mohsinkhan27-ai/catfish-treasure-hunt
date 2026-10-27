@@ -135,24 +135,31 @@ CF.Main = {
     CF.Treasure.update();
     CF.HUD.update();
 
-    if (CF.Treasure.foundCount >= CF.CONFIG.TREASURE_COUNT) {
-      this.state = 'win';
-      CF.Audio.win();
-      CF.HUD.showWin((performance.now() - this.startTime) / 1000);
-    }
+    // Game only ends when BOTH tasks are completed: killing the octopus AND finding all chests!
+    this.checkGameWin();
 
     CF.Input.clearFrame();
   },
 
-  winBoss: function () {
+  checkGameWin: function () {
     if (this.state !== 'play') return;
-    this.state = 'win';
-    var elapsed = (performance.now() - this.startTime) / 1000;
-    if (CF.HUD && CF.HUD.showBossWin) {
-      CF.HUD.showBossWin(elapsed);
-    } else if (CF.HUD && CF.HUD.showWin) {
-      CF.HUD.showWin(elapsed);
+    var allChests = (CF.Treasure && CF.Treasure.foundCount >= CF.CONFIG.TREASURE_COUNT);
+    var octopusDead = (!CF.Octopus || !CF.Octopus.alive);
+
+    if (allChests && octopusDead) {
+      this.state = 'win';
+      CF.Audio.win();
+      var elapsed = (performance.now() - this.startTime) / 1000;
+      if (CF.HUD && CF.HUD.showGrandWin) {
+        CF.HUD.showGrandWin(elapsed);
+      } else if (CF.HUD && CF.HUD.showWin) {
+        CF.HUD.showWin(elapsed);
+      }
     }
+  },
+
+  winBoss: function () {
+    this.checkGameWin();
   },
 
   lose: function () {

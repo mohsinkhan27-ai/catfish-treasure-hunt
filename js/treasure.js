@@ -181,6 +181,15 @@ CF.Treasure = {
             CF.HUD.showUnlock(reward);
           }
         }
+
+        // Objective check
+        if (this.foundCount >= C.TREASURE_COUNT) {
+          if (CF.Octopus && CF.Octopus.alive) {
+            if (CF.HUD && CF.HUD.showObjectiveToast) {
+              CF.HUD.showObjectiveToast('📦 All 6 treasures recovered! Now hunt down and destroy the Giant Octopus on the seafloor to win!');
+            }
+          }
+        }
       }
     }
   }
