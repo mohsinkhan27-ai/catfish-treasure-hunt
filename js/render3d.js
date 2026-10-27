@@ -182,33 +182,33 @@ CF.Render3D = {
 
   buildSkyAndSun: function () {
     var C = CF.CONFIG;
-    // 1. Giant Radiant Sun in the bright sky directly above the central oceanic reef!
+    // 1. Giant Radiant Sun in the bright sky directly above the oceanic reef!
     var sunGeom = new THREE.SphereGeometry(140, 20, 20);
     var sunMat = new THREE.MeshBasicMaterial({ color: 0xfffa70 });
     var sunMesh = new THREE.Mesh(sunGeom, sunMat);
-    sunMesh.position.set(0, 520, 320);
+    sunMesh.position.set(0, 480, 260);
     this.scene.add(sunMesh);
 
-    // Golden luminous halo
+    // Golden luminous halo with depthWrite false
     var haloGeom = new THREE.SphereGeometry(280, 20, 20);
-    var haloMat = new THREE.MeshBasicMaterial({ color: 0xffdf55, transparent: true, opacity: 0.42 });
+    var haloMat = new THREE.MeshBasicMaterial({ color: 0xffdf55, transparent: true, opacity: 0.42, depthWrite: false });
     var haloMesh = new THREE.Mesh(haloGeom, haloMat);
     haloMesh.position.copy(sunMesh.position);
     this.scene.add(haloMesh);
 
     // 12 Sunbeam Rays streaming down into the ocean
-    var rayGeom = new THREE.ConeGeometry(35, 450, 6, 1, true);
-    var rayMat = new THREE.MeshBasicMaterial({ color: 0xfff6c2, transparent: true, opacity: 0.12, side: THREE.DoubleSide });
+    var rayGeom = new THREE.ConeGeometry(38, 440, 6, 1, true);
+    var rayMat = new THREE.MeshBasicMaterial({ color: 0xfff6c2, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false });
     for (var r = 0; r < 8; r++) {
       var ray = new THREE.Mesh(rayGeom, rayMat);
       var rAngle = (r / 8) * Math.PI * 2;
-      ray.position.set(Math.sin(rAngle) * 70, 320, 320 + Math.cos(rAngle) * 70);
+      ray.position.set(Math.sin(rAngle) * 70, 300, 260 + Math.cos(rAngle) * 70);
       ray.rotation.x = 0.22;
       ray.rotation.z = Math.sin(rAngle) * 0.18;
       this.scene.add(ray);
     }
 
-    // 2. Fluffy White Cartoon Clouds floating at jump altitude (y = 170 to 240) right above the reef!
+    // 2. Fluffy White Cartoon Clouds floating 360 degrees around the horizon (y = 175 to 240)
     var cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x334455 });
     var sphereGeom = new THREE.SphereGeometry(1, 8, 8);
 
@@ -218,7 +218,13 @@ CF.Render3D = {
       { x: -50,  y: 230, z: -150 },
       { x: 180,  y: 190, z: 160 },
       { x: -220, y: 220, z: 220 },
-      { x: 40,   y: 240, z: 280 }
+      { x: 40,   y: 240, z: 280 },
+      { x: 280,  y: 200, z: -200 },
+      { x: -300, y: 215, z: -180 },
+      { x: -250, y: 235, z: -40 },
+      { x: 230,  y: 205, z: 380 },
+      { x: -140, y: 225, z: 410 },
+      { x: 340,  y: 210, z: 90 }
     ];
 
     for (var c = 0; c < cloudLocs.length; c++) {
@@ -911,20 +917,20 @@ CF.Render3D = {
     }
 
     // Dynamic Sky & Fog transition between Deep Ocean and Sunny Atmosphere
-    var isBreaching = (CF.Player && CF.Player.y > C.WORLD_SURFACE);
+    var isBreaching = (CF.Player && CF.Player.isBreaching);
     var targetBgColor = isBreaching ? new THREE.Color(0x38bdf8) : new THREE.Color(0x0c7da8);
     var targetFogColor = isBreaching ? new THREE.Color(0x7dd3fc) : new THREE.Color(0x0c7da8);
-    var targetFogNear = isBreaching ? 6000 : 1400;
-    var targetFogFar = isBreaching ? 25000 : 5500;
+    var targetFogNear = isBreaching ? 2500 : 1400;
+    var targetFogFar = isBreaching ? 5800 : 5500;
 
     if (this.scene) {
       if (this.scene.background) {
-        this.scene.background.lerp(targetBgColor, isBreaching ? 0.25 : 0.08);
+        this.scene.background.lerp(targetBgColor, 0.08);
       }
       if (this.scene.fog) {
-        this.scene.fog.color.lerp(targetFogColor, isBreaching ? 0.25 : 0.08);
-        this.scene.fog.near = CF.lerp(this.scene.fog.near, targetFogNear, isBreaching ? 0.25 : 0.08);
-        this.scene.fog.far = CF.lerp(this.scene.fog.far, targetFogFar, isBreaching ? 0.25 : 0.08);
+        this.scene.fog.color.lerp(targetFogColor, 0.08);
+        this.scene.fog.near = CF.lerp(this.scene.fog.near, targetFogNear, 0.08);
+        this.scene.fog.far = CF.lerp(this.scene.fog.far, targetFogFar, 0.08);
       }
     }
 
@@ -1003,7 +1009,7 @@ CF.Render3D = {
         this.camera.lookAt(birdLookTarget);
 
       } else {
-        // 3. Third-Person View: Over-The-Shoulder View with Hero Cam & Sky Jump Views
+        // 3. Third-Person View: Over-The-Shoulder View with Hero Cam & Smooth Breach Tracking
         if (this.heroCamTimer > 0) {
           // Hero close-up showcasing catfish face & new accessory!
           this.heroCamTimer -= dt;
@@ -1015,44 +1021,36 @@ CF.Render3D = {
           var heroLook = pm.position.clone().add(forward.clone().multiplyScalar(8)).add(up.clone().multiplyScalar(4));
           this.camera.lookAt(heroLook);
 
-        } else if (CF.Player && CF.Player.y > C.WORLD_SURFACE) {
-          // Rock-Solid Cinematic Airborne Camera!
-          // Uses pure horizontal heading so camera NEVER rolls or tumbles with fish!
-          var p = CF.Player;
-          var yaw = p.yaw;
+        } else {
+          // Unified Over-The-Shoulder Camera for both Swimming and Airborne Breach!
+          // Catfish face, cat ears, and accessories are prominently visible, with zero camera popping or jumping.
+          var isBreach = (CF.Player && CF.Player.isBreaching);
+          var distBack = isBreach ? 152 : 138;
+          var distRight = 28;
+          var distUp = isBreach ? 54 : 50;
+
+          var yaw = CF.Player ? CF.Player.yaw : 0;
           var hFwdX = Math.sin(yaw);
           var hFwdZ = Math.cos(yaw);
           var hRgtX = Math.cos(yaw);
           var hRgtZ = -Math.sin(yaw);
 
-          // Stable camera sits behind and to the side, framing the catfish leaping
-          // with the sea surface and ships below, and the brilliant sunny sky and clouds above!
-          var skyCamTarget = new THREE.Vector3(
-            p.x - hFwdX * 160 + hRgtX * 42,
-            Math.max(C.WORLD_SURFACE + 35, p.y * 0.72 + 25),
-            p.z - hFwdZ * 160 + hRgtZ * 42
+          // Position camera behind and to the right shoulder, looking slightly ahead and down at the fish
+          var targetCamPos = new THREE.Vector3(
+            pm.position.x - hFwdX * distBack + hRgtX * distRight,
+            pm.position.y + distUp,
+            pm.position.z - hFwdZ * distBack + hRgtZ * distRight
           );
-          this.camera.position.lerp(skyCamTarget, 0.09);
 
-          // Focus directly on the soaring catfish!
-          var skyLook = new THREE.Vector3(p.x, p.y + 4, p.z);
-          this.camera.lookAt(skyLook);
+          this.camera.position.lerp(targetCamPos, isBreach ? 0.12 : 0.08);
 
-        } else {
-          // Enhanced Three-Quarters Over-the-Shoulder View!
-          // Catfish face, cat ears, and accessories (crown, pirate hat, mask, starfish) are prominently visible!
-          var camTarget = pm.position.clone()
-            .sub(forward.clone().multiplyScalar(138))
-            .add(right.clone().multiplyScalar(30))
-            .add(up.clone().multiplyScalar(52));
-
-          this.camera.position.lerp(camTarget, 0.08);
-
-          // Focus on the catfish's head so face & accessories are clearly in view!
-          var lookTarget = pm.position.clone()
-            .add(forward.clone().multiplyScalar(16))
-            .add(up.clone().multiplyScalar(6));
-          this.camera.lookAt(lookTarget);
+          // Focus target: catfish head & torso, slightly forward so horizon and forward environment are well framed
+          var targetLook = new THREE.Vector3(
+            pm.position.x + hFwdX * 22,
+            pm.position.y + 4,
+            pm.position.z + hFwdZ * 22
+          );
+          this.camera.lookAt(targetLook);
         }
       }
     }

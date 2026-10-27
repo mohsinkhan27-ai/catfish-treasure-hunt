@@ -37,6 +37,8 @@ CF.Player = {
 
   // Arcade Thrills
   boostTimer: 0,
+  breachState: 'underwater', // 'underwater' | 'airborne' | 'cooldown'
+  breachCooldown: 0,
   isBreaching: false,
   breachFlip: 0,
 
@@ -54,6 +56,8 @@ CF.Player = {
     this.speed = 0;
     this.health = C.HEALTH_MAX;
     this.boostTimer = 0;
+    this.breachState = 'underwater';
+    this.breachCooldown = 0;
     this.isBreaching = false;
     this.breachFlip = 0;
     this.snorkelTimer = 0;
@@ -501,11 +505,6 @@ CF.Player = {
     starfishGroup.visible = false;
     v.add(starfishGroup);
     this.hatMeshes.starfish = starfishGroup;
-    starfishGroup.add(starGlow);
-
-    starfishGroup.visible = false;
-    v.add(starfishGroup);
-    this.hatMeshes.starfish = starfishGroup;
   },
 
   setFirstPerson: function (isFirst) {
@@ -514,42 +513,59 @@ CF.Player = {
     }
   },
 
-  update: function () {
+  update: function (timeScale) {
     var C = CF.CONFIG;
     var a = CF.Input.axis();
     var dt = 1 / 60;
+    var ts = (typeof timeScale === 'number') ? timeScale : 1.0;
 
     // Turbo Boost decay
     if (this.boostTimer > 0) {
-      this.boostTimer -= dt;
+      this.boostTimer -= dt * ts;
+    }
+
+    // Breach Cooldown decay
+    if (this.breachCooldown > 0) {
+      this.breachCooldown -= dt * ts;
+      if (this.breachCooldown <= 0) {
+        this.breachCooldown = 0;
+        if (this.breachState === 'cooldown') {
+          this.breachState = 'underwater';
+        }
+      }
     }
 
     // 1. Yaw Steering (A / D or Left / Right Arrows)
-    this.yaw -= a.x * C.PLAYER_TURN_SPEED;
+    this.yaw -= a.x * C.PLAYER_TURN_SPEED * ts;
 
     // 2. Direct Vertical 3D Swimming (Space = UP toward sun, Shift/C/Q = DOWN toward reef)
-    if (this.y < C.WORLD_SURFACE) {
+    if (this.breachState !== 'airborne') {
       if (a.z > 0) {
-        this.vy = CF.lerp(this.vy, C.PLAYER_SWIM_UP, 0.18);
-        this.pitch = CF.lerp(this.pitch, 0.42, 0.12);
+        this.vy = CF.lerp(this.vy, C.PLAYER_SWIM_UP, 0.18 * ts);
+        this.pitch = CF.lerp(this.pitch, 0.42, 0.12 * ts);
       } else if (a.z < 0) {
-        this.vy = CF.lerp(this.vy, -C.PLAYER_SWIM_DOWN, 0.18);
-        this.pitch = CF.lerp(this.pitch, -0.42, 0.12);
+        this.vy = CF.lerp(this.vy, -C.PLAYER_SWIM_DOWN, 0.18 * ts);
+        this.pitch = CF.lerp(this.pitch, -0.42, 0.12 * ts);
       } else {
-        this.vy *= 0.91;
-        this.pitch = CF.lerp(this.pitch, 0, 0.08);
+        this.vy *= Math.pow(0.91, ts);
+        this.pitch = CF.lerp(this.pitch, 0, 0.08 * ts);
       }
     }
 
     // 3. Roll Banking into Turns
-    this.roll = CF.lerp(this.roll, -a.x * 0.38, 0.1);
+    this.roll = CF.lerp(this.roll, -a.x * 0.38, 0.1 * ts);
 
     // 4. Forward / Backward Propulsion (W / S or Up / Down Arrows)
     var currentMaxSpeed = (this.boostTimer > 0) ? (C.PLAYER_MAX_SPEED * 2.3) : C.PLAYER_MAX_SPEED;
-    if (a.y !== 0) {
-      this.speed = Math.min(currentMaxSpeed, this.speed + a.y * C.PLAYER_ACCEL);
+    if (this.breachState !== 'airborne') {
+      if (a.y !== 0) {
+        this.speed = Math.min(currentMaxSpeed, this.speed + a.y * C.PLAYER_ACCEL * ts);
+      }
+      this.speed *= Math.pow(C.PLAYER_DRAG, ts);
+    } else {
+      // In air, maintain forward momentum with minimal air resistance
+      this.speed *= Math.pow(0.992, ts);
     }
-    this.speed *= C.PLAYER_DRAG;
 
     // 5. Compute 3D Velocity & Movement
     var fwdX = Math.sin(this.yaw) * Math.cos(this.pitch);
@@ -559,9 +575,9 @@ CF.Player = {
     this.vx = fwdX * this.speed;
     this.vz = fwdZ * this.speed;
 
-    this.x += this.vx;
-    this.y += this.vy + (fwdY * this.speed * 0.5);
-    this.z += this.vz;
+    this.x += this.vx * ts;
+    this.y += (this.vy + (fwdY * this.speed * 0.5)) * ts;
+    this.z += this.vz * ts;
 
     // 6. Surface Breaching, Airborne Physics & World Bounds Check
     var surfaceY = C.WORLD_SURFACE;
@@ -570,53 +586,57 @@ CF.Player = {
     this.x = CF.clamp(this.x, -C.WORLD_HALF + 40, C.WORLD_HALF - 40);
     this.z = CF.clamp(this.z, -C.WORLD_HALF + 40, C.WORLD_HALF - 40);
 
-    if (this.y >= surfaceY) {
-      // Catfish is flying in the sunny air!
-      if (!this.isBreaching) {
-        this.isBreaching = true;
-        CF.Render3D.splash(this.x, this.z, true);
-        if (CF.Audio && CF.Audio.slowMoLeap) CF.Audio.slowMoLeap();
-        else if (CF.Audio) CF.Audio.leap();
-      }
+    if (this.breachState === 'airborne') {
+      this.isBreaching = true;
 
-      // Gentle buoyant air gravity
-      this.vy -= 0.11;
-      this.speed *= 0.99;
+      // Air gravity smoothly decelerates ascent and accelerates clean descent
+      this.vy -= 0.18 * ts;
 
-      // Authentic Dolphin Breach Pitch Arc (NO spinning in circles!)
-      // Upward climb: nose points up (+0.42 rad)
+      // Authentic Dolphin Breach Pitch Arc (Graceful arc, NO tumbling or spinning!)
+      // Upward climb: nose points up (+0.35 rad)
       // Apex: smoothly levels out (0 rad)
-      // Descent: dips downward (-0.48 rad) for clean dive
-      if (this.vy > 1.2) {
-        this.pitch = CF.lerp(this.pitch, 0.42, 0.08);
-      } else if (this.vy < -1.2) {
-        this.pitch = CF.lerp(this.pitch, -0.48, 0.08);
+      // Descent: dips downward (-0.40 rad) for clean ocean dive entry
+      var targetPitch = 0.0;
+      if (this.vy > 0.8) {
+        targetPitch = 0.35;
+      } else if (this.vy < -0.8) {
+        targetPitch = -0.40;
       } else {
-        this.pitch = CF.lerp(this.pitch, 0.0, 0.08);
+        targetPitch = 0.0;
       }
+      this.pitch = CF.lerp(this.pitch, targetPitch, 0.10 * ts);
+      this.roll = CF.lerp(this.roll, 0.0, 0.10 * ts);
 
-      // Water re-entry dive
-      if (this.y + this.vy < surfaceY) {
+      // Re-entry into water
+      if (this.y < surfaceY) {
+        this.y = surfaceY - 1.0;
+        this.breachState = 'cooldown';
         this.isBreaching = false;
-        this.vy = Math.max(this.vy, -4.2);
+        this.breachCooldown = 1.6; // 1.6s cooldown guarantees no rapid re-triggering
+        this.vy = -3.2; // Clean diving re-entry
+        this.pitch = -0.30;
         CF.Render3D.splash(this.x, this.z, false);
-        CF.Audio.splash();
+        if (CF.Audio && CF.Audio.splash) CF.Audio.splash();
+      } else {
+        // Natural vault height ceiling (~44 units above water, keeping ships & sky in frame)
+        this.y = Math.min(this.y, surfaceY + 46);
       }
-
-      this.y = Math.min(this.y, 280); // High sky ceiling
     } else {
-      // Underwater
-      var launching = (this.vy > 0.8) || (this.pitch > 0.1 && this.speed > 3.0);
-      if (this.y >= surfaceY - 14 && launching) {
+      // Underwater or Cooldown
+      this.isBreaching = false;
+
+      var launching = (this.vy > 1.3) || (this.pitch > 0.18 && this.speed > 2.8);
+      if (this.breachState === 'underwater' && this.y >= surfaceY - 10 && launching) {
         // MAJESTIC SOARING LAUNCH INTO THE SUNNY SKY!
+        this.breachState = 'airborne';
         this.isBreaching = true;
-        this.vy = Math.max(this.vy * 1.6, 9.4);
+        this.vy = 4.2; // Perfectly tuned jump impulse: arcs ~44 units above water (peak y ≈ 124)
         CF.Render3D.splash(this.x, this.z, true);
         if (CF.Audio && CF.Audio.slowMoLeap) CF.Audio.slowMoLeap();
         else if (CF.Audio) CF.Audio.leap();
       } else {
-        this.y = CF.clamp(this.y, floorY, surfaceY - 2);
-        this.isBreaching = false;
+        var maxSubmergedY = (this.breachCooldown > 0) ? (surfaceY - 4) : (surfaceY - 1.5);
+        this.y = CF.clamp(this.y, floorY, maxSubmergedY);
       }
     }
 

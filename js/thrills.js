@@ -226,8 +226,8 @@ CF.Thrills = {
           p.boostTimer = 3.2;
           p.speed = CF.CONFIG.PLAYER_MAX_SPEED * 2.3;
           if (r.isJumpRamp) {
-            p.vy = 12.0;
-            p.pitch = 0.5;
+            p.vy = 4.6;
+            p.pitch = 0.38;
           }
 
           CF.Audio.boost();

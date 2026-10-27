@@ -67,16 +67,16 @@ CF.Main = {
     if (dt > 100) dt = 100;
 
     // Cinematic Slow Motion during Surface Jump!
-    var isBreaching = (CF.Player && CF.Player.y > CF.CONFIG.WORLD_SURFACE);
-    var targetScale = isBreaching ? 0.32 : 1.0;
+    var isBreaching = (CF.Player && CF.Player.isBreaching);
+    var targetScale = isBreaching ? 0.38 : 1.0;
     this.timeScale = this.timeScale || 1.0;
-    this.timeScale = CF.lerp(this.timeScale, targetScale, 0.18);
+    this.timeScale = CF.lerp(this.timeScale, targetScale, 0.12);
 
     var scaledDt = dt * this.timeScale;
     this.t += scaledDt;
 
     if (this.state === 'play') {
-      this.acc += scaledDt;
+      this.acc += dt;
       if (this.acc > 100) this.acc = 100;
       while (this.acc >= this.STEP) {
         this.update();
@@ -85,7 +85,7 @@ CF.Main = {
       }
     }
 
-    CF.Render3D.update(scaledDt / 1000, this.t);
+    CF.Render3D.update(dt / 1000, this.t);
     this.render();
 
     requestAnimationFrame(function (n) { self.loop(n); });
@@ -101,8 +101,9 @@ CF.Main = {
       return;
     }
 
-    var dt = this.STEP / 1000;
-    CF.Player.update();
+    var ts = this.timeScale || 1.0;
+    var dt = (this.STEP / 1000) * ts;
+    CF.Player.update(ts);
     if (CF.Thrills) CF.Thrills.update(dt, this.t);
     CF.Critters.update(this.t);
     CF.Shark.update(this.t, dt);
