@@ -1,4 +1,4 @@
-window.CF = window.CF || {};
+var CF = window.CF = window.CF || {};
 
 CF.Player = {
   x: 0,
@@ -83,6 +83,12 @@ CF.Player = {
         this.hatMeshes[key].visible = (key === this.activeHat);
       }
     }
+    if (CF.Render3D && CF.Render3D.triggerHeroCam) {
+      CF.Render3D.triggerHeroCam(3.0);
+    }
+    if (CF.HUD && CF.HUD.updateAvatar) {
+      CF.HUD.updateAvatar();
+    }
   },
 
   equipTrail: function (id) {
@@ -90,6 +96,12 @@ CF.Player = {
       this.activeTrail = null;
     } else {
       this.activeTrail = id;
+    }
+    if (CF.Render3D && CF.Render3D.triggerHeroCam) {
+      CF.Render3D.triggerHeroCam(2.5);
+    }
+    if (CF.HUD && CF.HUD.updateAvatar) {
+      CF.HUD.updateAvatar();
     }
   },
 
@@ -99,6 +111,12 @@ CF.Player = {
       this.equipTrail(id);
     } else {
       this.equipHat(id);
+    }
+    if (CF.Render3D && CF.Render3D.triggerHeroCam) {
+      CF.Render3D.triggerHeroCam(3.5);
+    }
+    if (CF.HUD && CF.HUD.updateAvatar) {
+      CF.HUD.updateAvatar();
     }
   },
 
@@ -310,50 +328,50 @@ CF.Player = {
     var whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     var darkMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
 
-    // 1. Pirate Hat & Eyepatch
+    // 1. Pirate Hat & Eyepatch (Enlarged and bold for high visibility!)
     var pirateGroup = new THREE.Group();
     // Eyepatch over right eye
-    var patchGeom = new THREE.CylinderGeometry(2.8, 2.8, 0.6, 12);
+    var patchGeom = new THREE.CylinderGeometry(3.2, 3.2, 0.7, 12);
     patchGeom.rotateX(Math.PI / 2);
     var patch = new THREE.Mesh(patchGeom, blackMat);
-    patch.position.set(-7.7, 3.2, 16.6);
+    patch.position.set(-7.7, 3.2, 16.8);
     patch.rotation.set(0.12, -0.3, 0);
     pirateGroup.add(patch);
 
     // Eyepatch strap
-    var strapGeom = new THREE.TorusGeometry(12.2, 0.4, 4, 20);
+    var strapGeom = new THREE.TorusGeometry(12.5, 0.5, 4, 20);
     strapGeom.rotateY(Math.PI / 2);
     var strap = new THREE.Mesh(strapGeom, blackMat);
     strap.position.set(0, 3.2, 8);
     strap.rotation.set(-0.2, 0, 0.22);
     pirateGroup.add(strap);
 
-    // Pirate Bicorne Hat
-    var hatCrownGeom = new THREE.CylinderGeometry(8.5, 7.5, 5, 14);
-    hatCrownGeom.scale(1.3, 0.8, 0.95);
+    // Pirate Bicorne Hat (Wide prominent silhouette visible from rear and sides!)
+    var hatCrownGeom = new THREE.CylinderGeometry(10.5, 9.0, 6.5, 14);
+    hatCrownGeom.scale(1.4, 0.85, 1.05);
     var hatCrown = new THREE.Mesh(hatCrownGeom, blackMat);
-    hatCrown.position.set(0, 12.5, 6.5);
+    hatCrown.position.set(0, 13.5, 6.5);
     hatCrown.rotation.set(-0.15, 0, 0);
     pirateGroup.add(hatCrown);
 
-    // Brim turned up
-    var brimGeom = new THREE.TorusGeometry(8.5, 2.2, 6, 18, Math.PI * 1.35);
+    // Flared golden brim
+    var brimGeom = new THREE.TorusGeometry(10.5, 2.8, 6, 18, Math.PI * 1.35);
     var brim = new THREE.Mesh(brimGeom, goldMat);
-    brim.position.set(0, 13.5, 6.5);
+    brim.position.set(0, 14.8, 6.5);
     brim.rotation.set(Math.PI / 2, 0, 0);
     pirateGroup.add(brim);
 
     // Skull and crossbones emblem
-    var skullGeom = new THREE.SphereGeometry(1.2, 8, 8);
+    var skullGeom = new THREE.SphereGeometry(1.6, 8, 8);
     var skull = new THREE.Mesh(skullGeom, whiteMat);
-    skull.position.set(0, 15.0, 13.2);
+    skull.position.set(0, 16.2, 14.2);
     pirateGroup.add(skull);
-    var bone1 = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.6, 0.5), whiteMat);
-    bone1.position.set(0, 14.2, 13.1);
+    var bone1 = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.8, 0.6), whiteMat);
+    bone1.position.set(0, 15.2, 14.1);
     bone1.rotation.z = 0.78;
     pirateGroup.add(bone1);
-    var bone2 = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.6, 0.5), whiteMat);
-    bone2.position.set(0, 14.2, 13.1);
+    var bone2 = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.8, 0.6), whiteMat);
+    bone2.position.set(0, 15.2, 14.1);
     bone2.rotation.z = -0.78;
     pirateGroup.add(bone2);
 
@@ -374,29 +392,29 @@ CF.Player = {
     var neonOrangeMat = new THREE.MeshBasicMaterial({ color: 0xff5500 });
 
     // Goggles Frame covering both eyes
-    var maskRingGeom = new THREE.TorusGeometry(6.5, 1.2, 6, 18);
+    var maskRingGeom = new THREE.TorusGeometry(7.8, 1.4, 6, 18);
     maskRingGeom.scale(1.7, 0.75, 1.0);
     var maskRing = new THREE.Mesh(maskRingGeom, cyanRubberMat);
-    maskRing.position.set(0, 3.2, 16.2);
+    maskRing.position.set(0, 3.2, 16.4);
     scubaGroup.add(maskRing);
 
     // Glass Visor
-    var visorGeom = new THREE.PlaneGeometry(17, 7.5);
+    var visorGeom = new THREE.PlaneGeometry(19, 8.5);
     var visor = new THREE.Mesh(visorGeom, glassMat);
-    visor.position.set(0, 3.2, 16.8);
+    visor.position.set(0, 3.2, 17.0);
     scubaGroup.add(visor);
 
-    // Snorkel Breathing Tube
-    var snorkelTubeGeom = new THREE.CylinderGeometry(0.9, 0.9, 17, 8);
+    // Tall Snorkel Breathing Tube (reaches high above head!)
+    var snorkelTubeGeom = new THREE.CylinderGeometry(1.1, 1.1, 22, 8);
     var snorkelTube = new THREE.Mesh(snorkelTubeGeom, yellowMat);
-    snorkelTube.position.set(9.5, 12, 6.5);
+    snorkelTube.position.set(10.5, 14, 6.0);
     snorkelTube.rotation.set(-0.25, 0, -0.2);
     scubaGroup.add(snorkelTube);
 
-    // Snorkel orange safety tip
-    var tipGeom = new THREE.CylinderGeometry(1.1, 1.1, 3, 8);
+    // Snorkel high-vis orange safety tip
+    var tipGeom = new THREE.CylinderGeometry(1.4, 1.4, 3.5, 8);
     var tip = new THREE.Mesh(tipGeom, neonOrangeMat);
-    tip.position.set(11.2, 20, 4.8);
+    tip.position.set(12.8, 24.5, 3.8);
     tip.rotation.set(-0.25, 0, -0.2);
     scubaGroup.add(tip);
 
@@ -404,80 +422,85 @@ CF.Player = {
     v.add(scubaGroup);
     this.hatMeshes.scuba = scubaGroup;
 
-    // 3. Royal Golden Crown
+    // 3. Royal Golden Crown (Tall, brilliant, and unmistakable from all camera angles!)
     var crownGroup = new THREE.Group();
     var rubyMat = new THREE.MeshBasicMaterial({ color: 0xff1144 });
     var sapphireMat = new THREE.MeshBasicMaterial({ color: 0x00a2ff });
 
-    // Crown Circlet
-    var circletGeom = new THREE.CylinderGeometry(6.6, 6.2, 3.2, 16, 1, true);
+    // Wide Gold Crown Circlet
+    var circletGeom = new THREE.CylinderGeometry(7.4, 6.8, 4.2, 16, 1, true);
     var circlet = new THREE.Mesh(circletGeom, goldMat);
-    circlet.position.set(0, 11.2, 7.0);
+    circlet.position.set(0, 11.5, 7.0);
     crownGroup.add(circlet);
 
-    // 5 Crown Points with Rubies
-    var peakGeom = new THREE.ConeGeometry(1.5, 4.5, 4);
-    var rubyGeom = new THREE.SphereGeometry(0.75, 6, 6);
+    // 5 Soaring Golden Peaks with Rubies
+    var peakGeom = new THREE.ConeGeometry(1.8, 6.5, 4);
+    var rubyGeom = new THREE.SphereGeometry(1.0, 8, 8);
     for (var p = 0; p < 5; p++) {
       var pAngle = (p / 5) * Math.PI * 2;
-      var px = Math.sin(pAngle) * 6.3;
-      var pz = Math.cos(pAngle) * 6.3;
+      var px = Math.sin(pAngle) * 7.0;
+      var pz = Math.cos(pAngle) * 7.0;
 
       var peak = new THREE.Mesh(peakGeom, goldMat);
-      peak.position.set(px, 14.5, 7.0 + pz);
+      peak.position.set(px, 15.5, 7.0 + pz);
       crownGroup.add(peak);
 
       var ruby = new THREE.Mesh(rubyGeom, rubyMat);
-      ruby.position.set(px, 16.8, 7.0 + pz);
+      ruby.position.set(px, 19.0, 7.0 + pz);
       crownGroup.add(ruby);
     }
 
     // Sapphire Gem in Center
-    var saphGeom = new THREE.BoxGeometry(1.8, 1.8, 1.0);
+    var saphGeom = new THREE.BoxGeometry(2.4, 2.4, 1.2);
     var saph = new THREE.Mesh(saphGeom, sapphireMat);
-    saph.position.set(0, 11.2, 13.5);
+    saph.position.set(0, 11.8, 14.2);
     crownGroup.add(saph);
 
-    // Royal light glow
-    var crownGlow = new THREE.PointLight(0xffdf55, 1.2, 35);
-    crownGlow.position.set(0, 15, 7);
+    // Royal light radiance
+    var crownGlow = new THREE.PointLight(0xffdf55, 1.8, 50);
+    crownGlow.position.set(0, 17, 7);
     crownGroup.add(crownGlow);
 
     crownGroup.visible = false;
     v.add(crownGroup);
     this.hatMeshes.crown = crownGroup;
 
-    // 4. Cute Glowing Starfish Hat
+    // 4. Cute Glowing Starfish Hat (Large sprawling starfish with bioluminescent glow!)
     var starfishGroup = new THREE.Group();
-    var starfishMat = new THREE.MeshLambertMaterial({ color: 0xff3888, emissive: 0x66082c });
+    var starfishMat = new THREE.MeshLambertMaterial({ color: 0xff2888, emissive: 0x770033 });
 
-    var starCenterGeom = new THREE.SphereGeometry(3.6, 12, 10);
+    var starCenterGeom = new THREE.SphereGeometry(4.6, 12, 10);
     starCenterGeom.scale(1, 0.45, 1);
     var starCenter = new THREE.Mesh(starCenterGeom, starfishMat);
-    starCenter.position.set(0, 11.4, 7.5);
+    starCenter.position.set(0, 11.8, 7.5);
     starfishGroup.add(starCenter);
 
-    var starArmGeom = new THREE.ConeGeometry(1.8, 6.4, 6);
-    starArmGeom.translate(0, 3.2, 0);
+    var starArmGeom = new THREE.ConeGeometry(2.4, 8.2, 6);
+    starArmGeom.translate(0, 4.1, 0);
     for (var a = 0; a < 5; a++) {
       var armAng = (a / 5) * Math.PI * 2 + 0.3;
       var arm = new THREE.Mesh(starArmGeom, starfishMat);
-      arm.position.set(0, 11.4, 7.5);
+      arm.position.set(0, 11.8, 7.5);
       arm.rotation.set(0, armAng, Math.PI / 2.3);
       starfishGroup.add(arm);
     }
 
-    // Cute little beaded eyes on the starfish
-    var sEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.55, 6, 6), darkMat);
-    sEye1.position.set(1.2, 12.2, 10.5);
+    // Cute beaded eyes on the starfish
+    var sEye1 = new THREE.Mesh(new THREE.SphereGeometry(0.7, 6, 6), darkMat);
+    sEye1.position.set(1.4, 12.8, 11.2);
     starfishGroup.add(sEye1);
-    var sEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.55, 6, 6), darkMat);
-    sEye2.position.set(-1.2, 12.2, 10.5);
+    var sEye2 = new THREE.Mesh(new THREE.SphereGeometry(0.7, 6, 6), darkMat);
+    sEye2.position.set(-1.4, 12.8, 11.2);
     starfishGroup.add(sEye2);
 
-    // Bioluminescent gentle pink light
-    var starGlow = new THREE.PointLight(0xff66aa, 1.4, 45);
-    starGlow.position.set(0, 13, 7.5);
+    // Bioluminescent radiance
+    var starGlow = new THREE.PointLight(0xff44aa, 2.0, 55);
+    starGlow.position.set(0, 14, 7.5);
+    starfishGroup.add(starGlow);
+
+    starfishGroup.visible = false;
+    v.add(starfishGroup);
+    this.hatMeshes.starfish = starfishGroup;
     starfishGroup.add(starGlow);
 
     starfishGroup.visible = false;
@@ -505,15 +528,17 @@ CF.Player = {
     this.yaw -= a.x * C.PLAYER_TURN_SPEED;
 
     // 2. Direct Vertical 3D Swimming (Space = UP toward sun, Shift/C/Q = DOWN toward reef)
-    if (a.z > 0) {
-      this.vy = CF.lerp(this.vy, C.PLAYER_SWIM_UP, 0.18);
-      this.pitch = CF.lerp(this.pitch, 0.42, 0.12);
-    } else if (a.z < 0) {
-      this.vy = CF.lerp(this.vy, -C.PLAYER_SWIM_DOWN, 0.18);
-      this.pitch = CF.lerp(this.pitch, -0.42, 0.12);
-    } else {
-      this.vy *= 0.91;
-      this.pitch = CF.lerp(this.pitch, 0, 0.08);
+    if (this.y < C.WORLD_SURFACE) {
+      if (a.z > 0) {
+        this.vy = CF.lerp(this.vy, C.PLAYER_SWIM_UP, 0.18);
+        this.pitch = CF.lerp(this.pitch, 0.42, 0.12);
+      } else if (a.z < 0) {
+        this.vy = CF.lerp(this.vy, -C.PLAYER_SWIM_DOWN, 0.18);
+        this.pitch = CF.lerp(this.pitch, -0.42, 0.12);
+      } else {
+        this.vy *= 0.91;
+        this.pitch = CF.lerp(this.pitch, 0, 0.08);
+      }
     }
 
     // 3. Roll Banking into Turns
@@ -554,28 +579,29 @@ CF.Player = {
         CF.Audio.splash();
       }
 
-      // Air gravity & drag
-      this.vy -= 0.38;
-      this.speed *= 0.985;
-      // Joyful acrobatic backflip rotation!
-      this.breachFlip += 0.28;
+      // Gentle buoyant air gravity so the jump lasts 2.5 - 3.2 seconds!
+      this.vy -= 0.11;
+      this.speed *= 0.99;
+      // Graceful acrobatic backflip rotation!
+      this.breachFlip += 0.082;
 
       // Water re-entry dive
       if (this.y + this.vy < surfaceY) {
         this.isBreaching = false;
         this.breachFlip = 0;
+        this.vy = Math.max(this.vy, -4.2);
         CF.Render3D.splash(this.x, this.z, false);
         CF.Audio.splash();
       }
 
-      this.y = Math.min(this.y, 180); // Airborne sky ceiling
+      this.y = Math.min(this.y, 280); // High sky ceiling
     } else {
       // Underwater
-      var launching = (this.vy > 1.2) || (this.pitch > 0.12 && this.speed > 3.8);
-      if (this.y >= surfaceY - 12 && launching) {
-        // LAUNCH OUT OF WATER!
+      var launching = (this.vy > 0.8) || (this.pitch > 0.1 && this.speed > 3.0);
+      if (this.y >= surfaceY - 14 && launching) {
+        // MAJESTIC SOARING LAUNCH INTO THE SUNNY SKY!
         this.isBreaching = true;
-        this.vy = Math.max(this.vy, 5.2);
+        this.vy = Math.max(this.vy * 1.6, 9.4);
         CF.Render3D.splash(this.x, this.z, true);
         CF.Audio.leap();
         CF.Audio.splash();
@@ -619,50 +645,56 @@ CF.Player = {
     var forward = new THREE.Vector3(0, 0, 1).applyEuler(this.mesh.rotation);
     var tailPos = this.mesh.position.clone().sub(forward.clone().multiplyScalar(32));
 
-    // Rainbow Bubble Trail
-    if (this.activeTrail === 'rainbow' && isMoving && Math.random() < 0.65) {
-      var rainbowCols = [0xff3366, 0xff8800, 0xffea00, 0x33dd55, 0x00e5ff, 0x3388ff, 0xb533ff];
-      this.rainbowHueIndex = (this.rainbowHueIndex + 1) % rainbowCols.length;
-      var col = rainbowCols[this.rainbowHueIndex];
+    // Rainbow Bubble Trail (Large, glossy, vibrant rainbow spheres!)
+    if (this.activeTrail === 'rainbow' && isMoving) {
+      var rainbowCols = [0xff2255, 0xff7700, 0xffe600, 0x22dd55, 0x00e5ff, 0x2288ff, 0xb522ff];
+      var spawnCount = (this.boostTimer > 0) ? 3 : 2;
+      for (var sc = 0; sc < spawnCount; sc++) {
+        this.rainbowHueIndex = (this.rainbowHueIndex + 1) % rainbowCols.length;
+        var col = rainbowCols[this.rainbowHueIndex];
 
-      var bubGeom = new THREE.SphereGeometry(CF.rand(1.5, 3.2), 8, 8);
-      var bubMat = new THREE.MeshBasicMaterial({
-        color: col,
-        transparent: true,
-        opacity: 0.85
-      });
-      var bub = new THREE.Mesh(bubGeom, bubMat);
-      bub.position.copy(tailPos).add(new THREE.Vector3(CF.rand(-2, 2), CF.rand(-2, 2), CF.rand(-2, 2)));
+        var bubGeom = new THREE.SphereGeometry(CF.rand(3.2, 5.8), 8, 8);
+        var bubMat = new THREE.MeshBasicMaterial({
+          color: col,
+          transparent: true,
+          opacity: 0.88
+        });
+        var bub = new THREE.Mesh(bubGeom, bubMat);
+        bub.position.copy(tailPos).add(new THREE.Vector3(CF.rand(-4, 4), CF.rand(-4, 4), CF.rand(-4, 4)));
 
-      CF.Render3D.scene.add(bub);
-      this.trailParticles.push({
-        mesh: bub,
-        vy: CF.rand(0.2, 0.6),
-        life: 1.0,
-        decay: 0.025
-      });
+        CF.Render3D.scene.add(bub);
+        this.trailParticles.push({
+          mesh: bub,
+          vy: CF.rand(0.3, 0.8),
+          life: 1.0,
+          decay: 0.02
+        });
+      }
     }
 
-    // Sparkle Dust / Neon Comet Trail
-    if (this.activeTrail === 'sparkle' && isMoving && Math.random() < 0.7) {
-      var spkGeom = new THREE.DodecahedronGeometry(CF.rand(1.2, 2.5), 0);
-      var spkColor = (Math.random() < 0.5) ? 0xffea44 : 0x00ffff;
-      var spkMat = new THREE.MeshBasicMaterial({
-        color: spkColor,
-        transparent: true,
-        opacity: 0.95
-      });
-      var spk = new THREE.Mesh(spkGeom, spkMat);
-      spk.position.copy(tailPos).add(new THREE.Vector3(CF.rand(-3, 3), CF.rand(-3, 3), CF.rand(-3, 3)));
-      spk.rotation.set(Math.random() * 3, Math.random() * 3, 0);
+    // Sparkle Dust / Neon Comet Trail (Glittering golden stars and cyan comet sparks!)
+    if (this.activeTrail === 'sparkle' && isMoving) {
+      var spawnCount2 = (this.boostTimer > 0) ? 3 : 2;
+      for (var sc2 = 0; sc2 < spawnCount2; sc2++) {
+        var spkGeom = new THREE.DodecahedronGeometry(CF.rand(2.4, 4.8), 0);
+        var spkColor = (Math.random() < 0.5) ? 0xffea00 : 0x00f5ff;
+        var spkMat = new THREE.MeshBasicMaterial({
+          color: spkColor,
+          transparent: true,
+          opacity: 0.95
+        });
+        var spk = new THREE.Mesh(spkGeom, spkMat);
+        spk.position.copy(tailPos).add(new THREE.Vector3(CF.rand(-5, 5), CF.rand(-5, 5), CF.rand(-5, 5)));
+        spk.rotation.set(Math.random() * 3, Math.random() * 3, 0);
 
-      CF.Render3D.scene.add(spk);
-      this.trailParticles.push({
-        mesh: spk,
-        vy: CF.rand(-0.1, 0.3),
-        life: 1.0,
-        decay: 0.03
-      });
+        CF.Render3D.scene.add(spk);
+        this.trailParticles.push({
+          mesh: spk,
+          vy: CF.rand(-0.2, 0.4),
+          life: 1.0,
+          decay: 0.024
+        });
+      }
     }
 
     // Scuba Mask Periodic Bubbles & Chime

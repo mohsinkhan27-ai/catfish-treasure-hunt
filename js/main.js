@@ -146,6 +146,7 @@ CF.Main = {
     if (this.state === 'play') {
       this.drawDanger(ctx, t);
       if (CF.Thrills) CF.Thrills.drawSpeedLines(ctx);
+      this.drawBreachBanner(ctx, t);
     }
 
     if (CF.Decoy.flash > 0) {
@@ -213,5 +214,33 @@ CF.Main = {
     g.addColorStop(1, 'rgba(4, 32, 52, 0.12)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, C.VIEW_W, C.VIEW_H);
+  },
+
+  drawBreachBanner: function (ctx, t) {
+    if (!CF.Player || !CF.Player.isBreaching) return;
+    var C = CF.CONFIG;
+    var cx = C.VIEW_W / 2;
+    var cy = 118;
+
+    ctx.save();
+    var g = ctx.createLinearGradient(cx - 150, 0, cx + 150, 0);
+    g.addColorStop(0, 'rgba(255, 215, 0, 0.9)');
+    g.addColorStop(0.5, 'rgba(255, 245, 160, 0.98)');
+    g.addColorStop(1, 'rgba(56, 189, 248, 0.9)');
+
+    ctx.fillStyle = g;
+    ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+    ctx.shadowBlur = 18;
+    roundRect(ctx, cx - 140, cy - 16, 280, 32, 16);
+    ctx.fill();
+
+    ctx.fillStyle = '#0f2438';
+    ctx.font = 'bold 13px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowBlur = 0;
+    ctx.fillText('☀️ SOARING THE SUNNY SKIES! ⛵', cx, cy);
+
+    ctx.restore();
   }
 };

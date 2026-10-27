@@ -413,6 +413,9 @@ button:active {
   transition: all 0.15s ease;
   background: rgba(30, 20, 60, 0.78);
   border-color: rgba(230, 160, 255, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .wardrobe-chip:hover {
@@ -423,6 +426,41 @@ button:active {
 
 .wardrobe-chip:active {
   transform: scale(0.96);
+}
+
+.catfish-avatar-mirror {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #f58a27 0%, #aa4e10 100%);
+  border: 1.5px solid #ffd700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 215, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.avatar-cat {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.avatar-hat {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.95rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+}
+
+.avatar-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 /* Unlock Celebration Toast */

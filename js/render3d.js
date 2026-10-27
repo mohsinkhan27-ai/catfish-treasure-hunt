@@ -8,9 +8,15 @@ CF.Render3D = {
   marineSnow: null,
   particles: [],
   kelpBlades: [],
+  surfaceShips: [],
+  heroCamTimer: 0,
   terrainGeom: null,
   clock: 0,
   cameraMode: 'third', // 'third', 'first', or 'birdsEye'
+
+  triggerHeroCam: function (dur) {
+    this.heroCamTimer = dur || 3.2;
+  },
 
   toggleCameraMode: function () {
     if (this.cameraMode === 'third') {
@@ -34,9 +40,11 @@ CF.Render3D = {
       var pm = CF.Player.mesh;
       var forward = new THREE.Vector3(0, 0, 1).applyEuler(pm.rotation);
       var up = new THREE.Vector3(0, 1, 0).applyEuler(pm.rotation);
+      var right = new THREE.Vector3(1, 0, 0).applyEuler(pm.rotation);
       var camTarget = pm.position.clone()
         .sub(forward.clone().multiplyScalar(140))
-        .add(up.clone().multiplyScalar(42));
+        .add(right.clone().multiplyScalar(30))
+        .add(up.clone().multiplyScalar(50));
       this.camera.position.copy(camTarget);
       var lookTarget = pm.position.clone().add(forward.clone().multiplyScalar(70));
       this.camera.lookAt(lookTarget);
@@ -79,6 +87,7 @@ CF.Render3D = {
     this.buildTerrain();
     this.buildWaterSurface();
     this.buildSkyAndSun();
+    this.buildSurfaceShips();
     this.buildKelpForest();
     this.buildReefsAndCorals();
     this.buildBubbleSystem();
@@ -195,6 +204,168 @@ CF.Render3D = {
       cloudGroup.position.set(cx, cy, cz);
       this.scene.add(cloudGroup);
     }
+  },
+
+  buildSurfaceShips: function () {
+    this.surfaceShips = [];
+    var scene = this.scene;
+    var C = CF.CONFIG;
+    var surfaceY = C.WORLD_SURFACE; // 80
+
+    // 1. Grand Royal Galleon "Sea Queen"
+    var galleon = new THREE.Group();
+    var woodDark = new THREE.MeshLambertMaterial({ color: 0x4a2c11 });
+    var woodDeck = new THREE.MeshLambertMaterial({ color: 0xc49a6c });
+    var goldTrim = new THREE.MeshLambertMaterial({ color: 0xdfb135 });
+    var sailMat = new THREE.MeshLambertMaterial({ color: 0xfdfaf0, side: THREE.DoubleSide });
+    var redFlag = new THREE.MeshLambertMaterial({ color: 0xdd2233 });
+
+    // Hull (lower hull sits partly in water, upper hull reaches y+16)
+    var hullGeom = new THREE.CylinderGeometry(14, 18, 70, 8);
+    hullGeom.rotateX(Math.PI / 2);
+    hullGeom.scale(1.1, 0.7, 1.25);
+    var hull = new THREE.Mesh(hullGeom, woodDark);
+    hull.position.set(0, -2, 0);
+    galleon.add(hull);
+
+    // Deck
+    var deckGeom = new THREE.BoxGeometry(26, 2, 74);
+    var deck = new THREE.Mesh(deckGeom, woodDeck);
+    deck.position.set(0, 7, 0);
+    galleon.add(deck);
+
+    // Stern Castle (quarterdeck at back)
+    var sternGeom = new THREE.BoxGeometry(24, 14, 22);
+    var stern = new THREE.Mesh(sternGeom, woodDark);
+    stern.position.set(0, 14, -26);
+    galleon.add(stern);
+
+    // Stern gold gallery
+    var galGeom = new THREE.BoxGeometry(20, 6, 2);
+    var gallery = new THREE.Mesh(galGeom, goldTrim);
+    gallery.position.set(0, 15, -37.5);
+    galleon.add(gallery);
+
+    // Bowsprit pole at front
+    var bowGeom = new THREE.CylinderGeometry(0.8, 1.6, 32, 6);
+    bowGeom.rotateX(Math.PI / 3);
+    var bowsprit = new THREE.Mesh(bowGeom, woodDark);
+    bowsprit.position.set(0, 14, 45);
+    galleon.add(bowsprit);
+
+    // 2 Tall Masts with Billowing Square Sails
+    var mastGeom1 = new THREE.CylinderGeometry(1.4, 2.2, 95, 8);
+    var mast1 = new THREE.Mesh(mastGeom1, woodDark);
+    mast1.position.set(0, 52, 6);
+    galleon.add(mast1);
+
+    var mastGeom2 = new THREE.CylinderGeometry(1.2, 1.8, 80, 8);
+    var mast2 = new THREE.Mesh(mastGeom2, woodDark);
+    mast2.position.set(0, 46, -18);
+    galleon.add(mast2);
+
+    // Main Yardarms & Billowing Sails
+    var sailGeom1 = new THREE.PlaneGeometry(38, 28, 4, 4);
+    var pos1 = sailGeom1.attributes.position;
+    for (var si = 0; si < pos1.count; si++) {
+      var sz = Math.sin((pos1.getY(si) / 28 + 0.5) * Math.PI) * 4.5;
+      pos1.setZ(si, sz);
+    }
+    sailGeom1.computeVertexNormals();
+
+    var sail1 = new THREE.Mesh(sailGeom1, sailMat);
+    sail1.position.set(0, 58, 6);
+    galleon.add(sail1);
+
+    var sailGeom2 = new THREE.PlaneGeometry(30, 22, 4, 4);
+    var sail2 = new THREE.Mesh(sailGeom2, sailMat);
+    sail2.position.set(0, 50, -18);
+    galleon.add(sail2);
+
+    // Crow's Nest Lookout Barrel on Main Mast
+    var nestGeom = new THREE.CylinderGeometry(4.5, 3.8, 6, 8, 1, true);
+    var nest = new THREE.Mesh(nestGeom, woodDark);
+    nest.position.set(0, 85, 6);
+    galleon.add(nest);
+
+    // Royal flag at mast tip
+    var flagGeom = new THREE.PlaneGeometry(10, 6);
+    var flag = new THREE.Mesh(flagGeom, redFlag);
+    flag.position.set(5, 98, 6);
+    galleon.add(flag);
+
+    galleon.position.set(-190, surfaceY, 130);
+    galleon.rotation.y = 0.45;
+    scene.add(galleon);
+    this.surfaceShips.push({ mesh: galleon, baseRotY: 0.45, bobPhase: 0 });
+
+    // 2. Coastal Fishing Trawler "Ocean Explorer"
+    var trawler = new THREE.Group();
+    var hullRed = new THREE.MeshLambertMaterial({ color: 0xd62828 });
+    var cabinWhite = new THREE.MeshLambertMaterial({ color: 0xf4f7f6 });
+    var glassCyan = new THREE.MeshLambertMaterial({ color: 0x48cae4 });
+
+    var tHullGeom = new THREE.BoxGeometry(22, 14, 56);
+    var tHull = new THREE.Mesh(tHullGeom, hullRed);
+    tHull.position.set(0, 2, 0);
+    trawler.add(tHull);
+
+    var cabinGeom = new THREE.BoxGeometry(16, 12, 18);
+    var cabin = new THREE.Mesh(cabinGeom, cabinWhite);
+    cabin.position.set(0, 14, 6);
+    trawler.add(cabin);
+
+    var tWinGeom = new THREE.BoxGeometry(14, 4, 1);
+    var tWin = new THREE.Mesh(tWinGeom, glassCyan);
+    tWin.position.set(0, 15, 15.5);
+    trawler.add(tWin);
+
+    var craneMastGeom = new THREE.CylinderGeometry(0.8, 1.2, 42, 6);
+    var craneMast = new THREE.Mesh(craneMastGeom, woodDark);
+    craneMast.position.set(0, 26, -14);
+    craneMast.rotation.x = -0.15;
+    trawler.add(craneMast);
+
+    trawler.position.set(320, surfaceY, -170);
+    trawler.rotation.y = -1.1;
+    scene.add(trawler);
+    this.surfaceShips.push({ mesh: trawler, baseRotY: -1.1, bobPhase: 1.8 });
+
+    // 3. Tropical Twin-Hull Sailing Catamaran
+    var catamaran = new THREE.Group();
+    var pontoonGeom = new THREE.CylinderGeometry(3.5, 4.0, 52, 8);
+    pontoonGeom.rotateX(Math.PI / 2);
+    var pontoonMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    var pL = new THREE.Mesh(pontoonGeom, pontoonMat);
+    pL.position.set(12, 1, 0);
+    catamaran.add(pL);
+    var pR = new THREE.Mesh(pontoonGeom, pontoonMat);
+    pR.position.set(-12, 1, 0);
+    catamaran.add(pR);
+
+    var cDeck = new THREE.Mesh(new THREE.BoxGeometry(28, 2, 34), woodDeck);
+    cDeck.position.set(0, 4, 0);
+    catamaran.add(cDeck);
+
+    var cMast = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.4, 58, 6), woodDark);
+    cMast.position.set(0, 31, 2);
+    catamaran.add(cMast);
+
+    var cSailGeom = new THREE.BufferGeometry();
+    var cSailVertices = new Float32Array([
+      0, 56, 2,
+      0, 8, 2,
+      0, 8, -22
+    ]);
+    cSailGeom.setAttribute('position', new THREE.BufferAttribute(cSailVertices, 3));
+    cSailGeom.computeVertexNormals();
+    var cSail = new THREE.Mesh(cSailGeom, new THREE.MeshLambertMaterial({ color: 0x00f0ff, side: THREE.DoubleSide }));
+    catamaran.add(cSail);
+
+    catamaran.position.set(150, surfaceY, 390);
+    catamaran.rotation.y = 1.6;
+    scene.add(catamaran);
+    this.surfaceShips.push({ mesh: catamaran, baseRotY: 1.6, bobPhase: 3.2 });
   },
 
   buildKelpForest: function () {
@@ -653,6 +824,34 @@ CF.Render3D = {
       }
     }
 
+    // Surface ships wave bobbing
+    if (this.surfaceShips) {
+      for (var sIdx = 0; sIdx < this.surfaceShips.length; sIdx++) {
+        var sObj = this.surfaceShips[sIdx];
+        sObj.mesh.position.y = C.WORLD_SURFACE + Math.sin(t * 0.0014 + sObj.bobPhase) * 1.6;
+        sObj.mesh.rotation.z = Math.sin(t * 0.001 + sObj.bobPhase) * 0.04;
+        sObj.mesh.rotation.x = Math.cos(t * 0.0012 + sObj.bobPhase) * 0.03;
+      }
+    }
+
+    // Dynamic Sky & Fog transition between Deep Ocean and Sunny Atmosphere
+    var isBreaching = (CF.Player && CF.Player.y > C.WORLD_SURFACE);
+    var targetBgColor = isBreaching ? new THREE.Color(0x38bdf8) : new THREE.Color(0x0c7da8);
+    var targetFogColor = isBreaching ? new THREE.Color(0x7dd3fc) : new THREE.Color(0x0c7da8);
+    var targetFogNear = isBreaching ? 3200 : 1400;
+    var targetFogFar = isBreaching ? 10000 : 5500;
+
+    if (this.scene) {
+      if (this.scene.background) {
+        this.scene.background.lerp(targetBgColor, 0.08);
+      }
+      if (this.scene.fog) {
+        this.scene.fog.color.lerp(targetFogColor, 0.08);
+        this.scene.fog.near = CF.lerp(this.scene.fog.near, targetFogNear, 0.08);
+        this.scene.fog.far = CF.lerp(this.scene.fog.far, targetFogFar, 0.08);
+      }
+    }
+
     // Kelp swaying
     for (var k = 0; k < this.kelpBlades.length; k++) {
       var kb = this.kelpBlades[k];
@@ -704,6 +903,7 @@ CF.Render3D = {
       var pm = CF.Player.mesh;
       var forward = new THREE.Vector3(0, 0, 1).applyEuler(pm.rotation);
       var up = new THREE.Vector3(0, 1, 0).applyEuler(pm.rotation);
+      var right = new THREE.Vector3(1, 0, 0).applyEuler(pm.rotation);
 
       if (this.cameraMode === 'first') {
         // 1. First-Person View (Looking out from Catfish Eyes)
@@ -727,15 +927,44 @@ CF.Render3D = {
         this.camera.lookAt(birdLookTarget);
 
       } else {
-        // 3. Third-Person View (Expansive Open-Ocean View)
-        var camTarget = pm.position.clone()
-          .sub(forward.clone().multiplyScalar(140))
-          .add(up.clone().multiplyScalar(42));
+        // 3. Third-Person View: Over-The-Shoulder View with Hero Cam & Sky Jump Views
+        if (this.heroCamTimer > 0) {
+          // Hero close-up showcasing catfish face & new accessory!
+          this.heroCamTimer -= dt;
+          var heroCamTarget = pm.position.clone()
+            .add(forward.clone().multiplyScalar(95))
+            .add(right.clone().multiplyScalar(35))
+            .add(up.clone().multiplyScalar(22));
+          this.camera.position.lerp(heroCamTarget, 0.1);
+          var heroLook = pm.position.clone().add(forward.clone().multiplyScalar(8)).add(up.clone().multiplyScalar(4));
+          this.camera.lookAt(heroLook);
 
-        this.camera.position.lerp(camTarget, 0.08);
+        } else if (CF.Player && CF.Player.y > C.WORLD_SURFACE) {
+          // Panoramic Airborne Breach Camera: pulls back & frames soaring jump with ship & sky!
+          var skyCamTarget = pm.position.clone()
+            .sub(forward.clone().multiplyScalar(190))
+            .add(right.clone().multiplyScalar(35))
+            .add(new THREE.Vector3(0, 20, 0));
+          this.camera.position.lerp(skyCamTarget, 0.06);
+          var skyLook = pm.position.clone().add(forward.clone().multiplyScalar(25));
+          this.camera.lookAt(skyLook);
 
-        var lookTarget = pm.position.clone().add(forward.clone().multiplyScalar(70));
-        this.camera.lookAt(lookTarget);
+        } else {
+          // Enhanced Three-Quarters Over-the-Shoulder View!
+          // Catfish face, cat ears, and accessories (crown, pirate hat, mask, starfish) are prominently visible!
+          var camTarget = pm.position.clone()
+            .sub(forward.clone().multiplyScalar(138))
+            .add(right.clone().multiplyScalar(30))
+            .add(up.clone().multiplyScalar(52));
+
+          this.camera.position.lerp(camTarget, 0.08);
+
+          // Focus on the catfish's head so face & accessories are clearly in view!
+          var lookTarget = pm.position.clone()
+            .add(forward.clone().multiplyScalar(16))
+            .add(up.clone().multiplyScalar(6));
+          this.camera.lookAt(lookTarget);
+        }
       }
     }
   },

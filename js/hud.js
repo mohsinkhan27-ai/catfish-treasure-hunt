@@ -72,6 +72,48 @@ CF.HUD = {
         self.closeWardrobe();
       }
     });
+
+    this.updateAvatar();
+  },
+
+  updateAvatar: function () {
+    var p = CF.Player;
+    if (!p) return;
+    var hatEl = document.getElementById('avatarHat');
+    var roleEl = document.getElementById('avatarRole');
+    var labelEl = document.getElementById('wardrobeLabel');
+
+    var hatEmoji = '';
+    var hatTitle = 'Closet (C)';
+    var roleTitle = 'Dress-Up';
+
+    if (p.activeHat === 'pirate') {
+      hatEmoji = '🏴‍☠️';
+      hatTitle = 'Pirate Cat (C)';
+      roleTitle = 'Ahoy Captain!';
+    } else if (p.activeHat === 'scuba') {
+      hatEmoji = '🤿';
+      hatTitle = 'Scuba Diver (C)';
+      roleTitle = 'Deep Explorer';
+    } else if (p.activeHat === 'crown') {
+      hatEmoji = '👑';
+      hatTitle = 'Royal King (C)';
+      roleTitle = 'Ocean Royalty';
+    } else if (p.activeHat === 'starfish') {
+      hatEmoji = '⭐️';
+      hatTitle = 'Starfish Cat (C)';
+      roleTitle = 'Reef Star';
+    }
+
+    if (p.activeTrail === 'rainbow') {
+      hatTitle += ' 🌈';
+    } else if (p.activeTrail === 'sparkle') {
+      hatTitle += ' ✨';
+    }
+
+    if (hatEl) hatEl.textContent = hatEmoji;
+    if (roleEl) roleEl.textContent = roleTitle;
+    if (labelEl) labelEl.textContent = hatTitle;
   },
 
   updateView: function (mode) {
@@ -161,12 +203,14 @@ CF.HUD = {
           p.equipHat(id);
         }
         self.renderWardrobe();
+        self.updateAvatar();
       });
     });
   },
 
   showUnlock: function (reward) {
     var self = this;
+    this.updateAvatar();
     if (!this.els.unlockToast) return;
 
     var iconEl = document.getElementById('unlockIcon');
