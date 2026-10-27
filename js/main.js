@@ -24,6 +24,7 @@ CF.Main = {
     CF.Critters.init();
     CF.Shark.init();
     CF.Decoy.init();
+    if (CF.Thrills) CF.Thrills.init();
     CF.Render3D.resetCamera();
 
     if (CF.HUD.els.startBtn) CF.HUD.els.startBtn.addEventListener('click', function () { self.start(); });
@@ -49,6 +50,7 @@ CF.Main = {
     CF.Critters.reset();
     CF.Shark.reset();
     CF.Decoy.reset();
+    if (CF.Thrills) CF.Thrills.reset();
     CF.Render3D.resetCamera();
     CF.Map.open = false;
 
@@ -94,6 +96,7 @@ CF.Main = {
 
     var dt = this.STEP / 1000;
     CF.Player.update();
+    if (CF.Thrills) CF.Thrills.update(dt, this.t);
     CF.Critters.update(this.t);
     CF.Shark.update(this.t, dt);
 
@@ -142,6 +145,7 @@ CF.Main = {
 
     if (this.state === 'play') {
       this.drawDanger(ctx, t);
+      if (CF.Thrills) CF.Thrills.drawSpeedLines(ctx);
     }
 
     if (CF.Decoy.flash > 0) {

@@ -78,6 +78,7 @@ CF.Render3D = {
     this.setupLighting();
     this.buildTerrain();
     this.buildWaterSurface();
+    this.buildSkyAndSun();
     this.buildKelpForest();
     this.buildReefsAndCorals();
     this.buildBubbleSystem();
@@ -156,6 +157,44 @@ CF.Render3D = {
 
     var surface = new THREE.Mesh(geom, mat);
     this.scene.add(surface);
+  },
+
+  buildSkyAndSun: function () {
+    var C = CF.CONFIG;
+    // 1. Radiant Cartoon Sun in the open sky
+    var sunGeom = new THREE.SphereGeometry(65, 16, 16);
+    var sunMat = new THREE.MeshBasicMaterial({ color: 0xfff4b8 });
+    var sunMesh = new THREE.Mesh(sunGeom, sunMat);
+    sunMesh.position.set(400, 680, 250);
+    this.scene.add(sunMesh);
+
+    var haloGeom = new THREE.SphereGeometry(110, 16, 16);
+    var haloMat = new THREE.MeshBasicMaterial({ color: 0xffdd66, transparent: true, opacity: 0.28 });
+    var haloMesh = new THREE.Mesh(haloGeom, haloMat);
+    haloMesh.position.copy(sunMesh.position);
+    this.scene.add(haloMesh);
+
+    // 2. Fluffy Stylized Low-Poly Clouds scattered across the upper atmosphere
+    var cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x223344 });
+    var sphereGeom = new THREE.SphereGeometry(1, 8, 8);
+
+    for (var c = 0; c < 14; c++) {
+      var cloudGroup = new THREE.Group();
+      var cx = CF.rand(-C.WORLD_HALF + 300, C.WORLD_HALF - 300);
+      var cz = CF.rand(-C.WORLD_HALF + 300, C.WORLD_HALF - 300);
+      var cy = CF.rand(240, 360);
+
+      var puffCount = CF.randInt(4, 7);
+      for (var p = 0; p < puffCount; p++) {
+        var puff = new THREE.Mesh(sphereGeom, cloudMat);
+        var pSize = CF.rand(25, 48);
+        puff.scale.set(pSize * 1.3, pSize * 0.75, pSize);
+        puff.position.set((p - puffCount / 2) * 26 + CF.rand(-10, 10), CF.rand(-6, 8), CF.rand(-12, 12));
+        cloudGroup.add(puff);
+      }
+      cloudGroup.position.set(cx, cy, cz);
+      this.scene.add(cloudGroup);
+    }
   },
 
   buildKelpForest: function () {
@@ -569,9 +608,50 @@ CF.Render3D = {
     }
   },
 
+  splash: function (x, z, isLeap) {
+    var count = isLeap ? 35 : 28;
+    var splashSphere = new THREE.SphereGeometry(1, 4, 4);
+    var splashMat = new THREE.MeshBasicMaterial({
+      color: 0xebffff,
+      transparent: true,
+      opacity: 0.95
+    });
+
+    for (var i = 0; i < count; i++) {
+      var p = new THREE.Mesh(splashSphere, splashMat.clone());
+      var scale = CF.rand(1.8, 3.8);
+      p.scale.set(scale, scale, scale);
+      p.position.set(x + CF.rand(-10, 10), CF.CONFIG.WORLD_SURFACE + 2, z + CF.rand(-10, 10));
+
+      var ang = CF.rand(0, Math.PI * 2);
+      var sp = CF.rand(1.8, 4.6);
+      var upSp = isLeap ? CF.rand(3.5, 7.0) : CF.rand(1.8, 4.2);
+
+      this.particles.push({
+        mesh: p,
+        vx: Math.cos(ang) * sp,
+        vy: upSp,
+        vz: Math.sin(ang) * sp,
+        life: 1.0,
+        decay: 0.025
+      });
+      this.scene.add(p);
+    }
+  },
+
   update: function (dt, t) {
     var C = CF.CONFIG;
     this.clock = t;
+
+    // Dynamic Camera FOV Kick during Turbo Boost or Jetstream Ride!
+    if (this.camera) {
+      var isThrilling = (CF.Player && (CF.Player.boostTimer > 0 || (CF.Thrills && CF.Thrills.activeJetstream)));
+      var targetFov = isThrilling ? 76 : 65;
+      if (Math.abs(this.camera.fov - targetFov) > 0.15) {
+        this.camera.fov = CF.lerp(this.camera.fov, targetFov, 0.08);
+        this.camera.updateProjectionMatrix();
+      }
+    }
 
     // Kelp swaying
     for (var k = 0; k < this.kelpBlades.length; k++) {

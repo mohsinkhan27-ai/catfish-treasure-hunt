@@ -112,6 +112,15 @@ CF.Treasure = {
     return group;
   },
 
+  ACCESSORIES: [
+    { id: 'pirate', name: 'Pirate Hat & Eyepatch', icon: '🏴‍☠️', desc: 'Ahoy Captain! Stylish black bicorne with gold trim and authentic eyepatch.' },
+    { id: 'scuba', name: 'Scuba Mask & Snorkel', icon: '🤿', desc: 'Deep-sea diver goggles with yellow breathing snorkel tube and bubble sounds!' },
+    { id: 'crown', name: 'Golden Crown', icon: '👑', desc: 'A royal golden crown with ruby gems and shimmering light fit for ocean royalty.' },
+    { id: 'starfish', name: 'Glowing Starfish Hat', icon: '⭐️', desc: 'A cute bioluminescent pink starfish clinging happily to your head!' },
+    { id: 'rainbow', name: 'Rainbow Bubble Trail', icon: '🌈', desc: 'Emits a vibrant stream of rainbow bubbles from your tail!' },
+    { id: 'sparkle', name: 'Sparkle Dust Comet', icon: '✨', desc: 'Glittering golden stars and cyan comet sparks drift behind your tail!' }
+  ],
+
   nearest: function () {
     var best = null;
     var bd = Infinity;
@@ -160,6 +169,16 @@ CF.Treasure = {
 
         if (it.mesh && CF.Render3D.scene) {
           CF.Render3D.scene.remove(it.mesh);
+        }
+
+        // Kid-Friendly Accessory Unlock!
+        var reward = this.ACCESSORIES[(this.foundCount - 1) % this.ACCESSORIES.length];
+        if (reward && CF.Player && CF.Player.unlock) {
+          CF.Player.unlock(reward.id);
+          CF.Audio.unlock();
+          if (CF.HUD && CF.HUD.showUnlock) {
+            CF.HUD.showUnlock(reward);
+          }
         }
       }
     }

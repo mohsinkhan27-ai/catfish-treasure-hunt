@@ -37,6 +37,10 @@
           <span class="chip-label">Signal</span>
           <div class="signal-bar"><div id="signalFill"></div></div>
         </div>
+        <div class="hud-chip wardrobe-chip" id="wardrobeBtn" style="pointer-events: auto; cursor: pointer;" title="Open Catfish Wardrobe (C)">
+          <span class="chip-label">Closet</span>
+          <b id="wardrobeLabel">👑 Closet (C)</b>
+        </div>
         <div class="hud-chip view-chip" id="viewBtn" style="pointer-events: auto; cursor: pointer;" title="Toggle 3rd / 1st / Bird's Eye view (V)">
           <span class="chip-label">View</span>
           <b id="viewLabel">3rd Person (V)</b>
@@ -70,6 +74,10 @@
       <div id="touchActions" class="touch-actions">
         <div class="touch-btn-cluster">
           <div class="touch-btn-row">
+            <button id="touchWardrobeBtn" class="touch-btn touch-btn-util" aria-label="Open Wardrobe">
+              <span class="touch-icon">👑</span>
+              <span class="touch-lbl">Closet</span>
+            </button>
             <button id="touchViewBtn" class="touch-btn touch-btn-util" aria-label="Toggle Camera View">
               <span class="touch-icon">👁</span>
               <span class="touch-lbl">View</span>
@@ -93,20 +101,45 @@
       </div>
     </div>
 
-    <div id="hint">WASD / Touch Joystick to swim &middot; Space / Shift / Up / Dive buttons &middot; V for Camera &middot; M for Map</div>
+    <!-- Kid-Friendly Accessory Unlock Toast Celebration -->
+    <div id="unlockToast" class="unlock-toast hidden">
+      <div class="unlock-sparkles">✨ 🎉 ✨</div>
+      <div class="unlock-badge">NEW ACCESSORY UNLOCKED!</div>
+      <div class="unlock-content">
+        <span id="unlockIcon" class="unlock-icon">👑</span>
+        <div class="unlock-texts">
+          <b id="unlockTitle" class="unlock-title">Golden Crown</b>
+          <p id="unlockDesc" class="unlock-desc">A royal crown fit for ocean royalty!</p>
+        </div>
+      </div>
+      <div class="unlock-hint">Auto-Equipped! Press <b>C</b> or tap <b>Closet</b> to switch anytime.</div>
+    </div>
+
+    <!-- Wardrobe & Costume Closet Modal -->
+    <div id="wardrobeModal" class="wardrobe-modal hidden">
+      <div class="wardrobe-panel">
+        <div class="wardrobe-header">
+          <h2>👑 Catfish Dress-Up Closet 🎀</h2>
+          <button id="wardrobeCloseBtn" class="wardrobe-close-btn" aria-label="Close Wardrobe">✖</button>
+        </div>
+        <p class="wardrobe-subtitle">Every treasure chest unlocks a silly or heroic accessory! Tap any unlocked item to wear or take off.</p>
+        <div id="wardrobeGrid" class="wardrobe-grid"></div>
+      </div>
+    </div>
+
+    <div id="hint">WASD / Touch Joystick to swim &middot; Space/Shift (Up/Dive) &middot; C for Closet &middot; V for Camera &middot; M for Map</div>
 
     <div id="startScreen" class="screen">
       <h1>Catfish Treasure Hunt</h1>
-      <p class="lede">A cat-faced fish roams the vast 3D open ocean. Follow the treasure map and its signal to dig up every hidden chest &mdash; but <b>3 apex predators</b> (Great White Shark, Great Hammerhead, and Giant Barracuda) hunt you across the depths!</p>
+      <p class="lede">A cat-faced fish roams the vast 3D open ocean. Follow the treasure map and its signal to dig up 6 hidden chests &mdash; while dodging <b>3 apex predators</b> across the depths!</p>
       <ul>
-        <li><b>WASD / On-screen Joystick</b> &mdash; swim forward, backward & 360&deg; steer</li>
-        <li><b>Space / Shift (or Up / Dive buttons)</b> &mdash; ascend / dive in 3D</li>
-        <li><b>V (or View button)</b> &mdash; cycle between <b>3rd Person</b>, <b>1st Person</b> & <b>Bird's Eye</b> views</li>
-        <li><b>M (or Map button)</b> &mdash; open the 3D sonar navigation chart (shows hunting predators)</li>
-        <li><b>Tablet & Touch Ready</b> &mdash; tap 📱 Touch in top bar anytime to toggle touch controls</li>
-        <li>Watch the <b>Signal</b> meter heat up as you near a treasure</li>
-        <li>Evade the <b>3 Predators</b> &mdash; their proximity drains life, but your health refills when you break away</li>
-        <li>Beware <b class="danger">explosive fake treasures</b> the predators plant &mdash; a lit fuse costs you half your life!</li>
+        <li><b>Dress-Up Fun</b> &mdash; Each chest unlocks a silly accessory: 🏴‍☠️ Pirate Hat, 🤿 Scuba Mask, 👑 Crown, ⭐️ Glowing Starfish, and 🌈 Rainbow Bubbles / ✨ Sparkle Trails!</li>
+        <li><b>Bubble Boost Speed Rings</b> &mdash; Swim through floating glowing rings for high-speed turbo bursts with speed lines!</li>
+        <li><b>Surface Breaching & Backflips</b> &mdash; Swim straight up to vault into the sunny sky with epic splashes and joyful 360&deg; backflips!</li>
+        <li><b>Current Jetstreams</b> &mdash; Ride twisting underwater slides that sweep you smoothly across long distances!</li>
+        <li><b>C (or Closet button)</b> &mdash; Open your Wardrobe closet anytime to mix and match accessories</li>
+        <li><b>WASD / Joystick</b> &mdash; Swim in 360&deg; &middot; <b>Space / Shift (Up / Dive)</b> to ascend and dive</li>
+        <li><b>V / 👁 View</b> &mdash; Toggle 3rd Person, 1st Person, and Bird's Eye Camera views &middot; <b>M / 🗺 Map</b> for 3D Sonar</li>
       </ul>
       <button id="startBtn" onclick="if(window.CF&&CF.Main)CF.Main.start();" autofocus>Dive In</button>
     </div>
@@ -136,6 +169,7 @@
   <script src="js/treasure.js"></script>
   <script src="js/decoy.js"></script>
   <script src="js/map.js"></script>
+  <script src="js/thrills.js"></script>
   <script src="js/hud.js"></script>
   <script src="js/main.js"></script>
   <script>
